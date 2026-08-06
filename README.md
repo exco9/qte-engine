@@ -51,7 +51,7 @@ Les lettres courtes (`z`, `w`, `a`...) suivent automatiquement la disposition du
 - `aim`: déplacer le viseur avec la souris jusque dans la cible fixe, puis appuyer sur l'input configuré.
 - `tracking`: maintenir l'input configuré tout en suivant à la souris une cible mobile pendant 45 % de la durée. `aim` et `tracking` suivent la sensibilité et l'inversion verticale configurées dans Minecraft.
 
-Mauvaise touche configurée, relâchement trop tôt ou expiration déclenche la commande d'échec. Les inputs sont rejugés côté serveur avant toute commande; le résultat annoncé par le client n'est pas considéré comme autoritaire. Les anciens types `reaction`, `attention`, `pattern` et `direction` sont migrés au chargement vers `observation`, `observation`, `input_sequence` et `input_sequence`.
+Mauvaise touche configurée, relâchement trop tôt ou expiration déclenche la commande d'échec. Les inputs sont rejugés côté serveur avant toute commande; le résultat annoncé par le client n'est pas considéré comme autoritaire.
 
 ## Textures
 
