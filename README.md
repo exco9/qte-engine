@@ -5,9 +5,10 @@ Mod NeoForge pour Minecraft 1.21.1. Définitions persistantes par monde, HUD cli
 ## Commandes
 
 ```text
-/qte create <id> <type> <key> <durée_secondes> <commande_résultat> [exclusive_input] [texture]
+/qte create <id> <type> <key> <duration> <output_succeed> <output_fail> [exclusive_input] [F1] [texture]
 /qte play <id>
 /qte remove <id>
+/qte edit <id> <type> <key> <duration> <output_succeed> <output_fail> [exclusive_input] [F1] [texture]
 /qte list
 /qte types
 ```
@@ -19,12 +20,12 @@ Mod NeoForge pour Minecraft 1.21.1. Définitions persistantes par monde, HUD cli
 Exemples:
 
 ```mcfunction
-/qte create esquive reaction space 2.5 "say %player% a esquivé" true
-/qte create rune input_sequence w,a,s,d 6 "function histoire:rune_reussie" true qte_engine:textures/gui/rune.png
-/qte create serrure mash e 4 "give %player% minecraft:tripwire_hook"
-/qte create parade timing mouse.left 2 "damage %player% 0"
-/qte play esquive
-/qte remove esquive
+/qte create 1 hold space 2.5 "say %player% succeed" true true
+/qte create rune input_sequence "w,a,s,d" 6 "say @s succeed" true false qte_engine:textures/gui/rune.png
+/qte create new mash e 4 "give %player% minecraft:tripwire_hook"
+/qte create test aim mouse.left 2 "damage %player% 0"
+/qte play 1
+/qte remove 1
 ```
 
 Touches acceptées sous forme courte (`space`, `w`, `left_shift`) ou identifiant Minecraft (`key.keyboard.space`, `key.mouse.left`). Séparer séquences par virgules, sans espaces.
