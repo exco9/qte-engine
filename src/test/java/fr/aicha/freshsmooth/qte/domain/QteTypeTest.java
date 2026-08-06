@@ -8,11 +8,14 @@ import org.junit.jupiter.api.Test;
 class QteTypeTest {
     @Test
     void parsesEveryDocumentedNameAndCommonSeparators() {
-        assertEquals(QteType.REACTION, QteType.parse("reaction"));
+        assertEquals(QteType.OBSERVATION, QteType.parse("reaction"));
+        assertEquals(QteType.OBSERVATION, QteType.parse("attention"));
+        assertEquals(QteType.INPUT_SEQUENCE, QteType.parse("pattern"));
+        assertEquals(QteType.INPUT_SEQUENCE, QteType.parse("direction"));
         assertEquals(QteType.INPUT_SEQUENCE, QteType.parse("input-sequence"));
         assertEquals(QteType.ANALOG_PRECISION, QteType.parse("analog precision"));
         assertEquals(QteType.DIALOGUE_TIMING, QteType.parse("DIALOGUE_TIMING"));
-        assertEquals(17, QteType.values().length);
+        assertEquals(13, QteType.values().length);
     }
 
     @Test

@@ -17,6 +17,14 @@ public final class QteRegistry {
         definitions.put(definition.id(), definition);
     }
 
+    public boolean replace(QteDefinition definition) {
+        if (!definitions.containsKey(definition.id())) {
+            return false;
+        }
+        definitions.put(definition.id(), definition);
+        return true;
+    }
+
     public Optional<QteDefinition> find(String id) {
         return Optional.ofNullable(definitions.get(id));
     }

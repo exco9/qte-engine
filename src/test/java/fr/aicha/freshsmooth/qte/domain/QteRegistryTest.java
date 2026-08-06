@@ -23,7 +23,34 @@ class QteRegistryTest {
         assertFalse(registry.remove("missing"));
     }
 
+    @Test
+    void editReplacesExistingDefinitionButNeverCreatesMissingId() {
+        QteRegistry registry = new QteRegistry();
+        QteDefinition original = definition("editable");
+        QteDefinition edited = QteDefinition.create(
+            "editable",
+            QteType.INPUT_SEQUENCE,
+            "w,a,s,d",
+            5,
+            "say edited",
+            true,
+            null
+        );
+
+        assertTrue(registry.add(original));
+        assertTrue(registry.replace(edited));
+        assertEquals(edited, registry.find("editable").orElseThrow());
+        assertFalse(registry.replace(QteDefinition.create(
+            "missing",
+            QteType.OBSERVATION,
+            "space",
+            2,
+            "say missing",
+            null
+        )));
+    }
+
     private static QteDefinition definition(String id) {
-        return QteDefinition.create(id, QteType.REACTION, "space", 2, "say ok", null);
+        return QteDefinition.create(id, QteType.OBSERVATION, "space", 2, "say ok", null);
     }
 }

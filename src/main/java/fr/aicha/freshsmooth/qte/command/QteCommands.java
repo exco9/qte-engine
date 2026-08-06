@@ -29,28 +29,64 @@ public final class QteCommands {
                 .requires(source -> source.hasPermission(2))
                 .then(Commands.argument("id", StringArgumentType.word())
                     .then(Commands.argument("type", StringArgumentType.word()).suggests(QteCommands::suggestTypes)
-                        .then(Commands.argument(QteCommandSchema.KEY_ARGUMENT, StringArgumentType.word())
+                        .then(Commands.argument(QteCommandSchema.INPUTS_ARGUMENT, StringArgumentType.string())
+                            .suggests(QteCommands::suggestInputs)
                             .then(Commands.argument("duration", DoubleArgumentType.doubleArg(0.1, 300))
-                                .then(Commands.argument("result", StringArgumentType.string())
-                                    .executes(context -> create(context, false, null))
+                                .then(Commands.argument(QteCommandSchema.SUCCESS_RESULT_ARGUMENT, StringArgumentType.string())
+                                  .then(Commands.argument(QteCommandSchema.FAILURE_RESULT_ARGUMENT, StringArgumentType.string())
+                                    .executes(context -> create(context, false, false, null))
                                     .then(Commands.argument("exclusive_input", BoolArgumentType.bool())
                                         .executes(context -> create(
                                             context,
                                             BoolArgumentType.getBool(context, "exclusive_input"),
+                                            false,
                                             null
                                         ))
-                                        .then(Commands.argument("texture", StringArgumentType.string())
+                                        .then(Commands.argument(QteCommandSchema.HIDE_HUD_ARGUMENT, BoolArgumentType.bool())
                                             .executes(context -> create(
                                                 context,
                                                 BoolArgumentType.getBool(context, "exclusive_input"),
-                                                StringArgumentType.getString(context, "texture")
-                                            ))))
-                                    .then(Commands.argument("texture", StringArgumentType.string())
-                                        .executes(context -> create(
+                                                BoolArgumentType.getBool(context, QteCommandSchema.HIDE_HUD_ARGUMENT),
+                                                null
+                                            ))
+                                            .then(Commands.argument("texture", StringArgumentType.string())
+                                                .executes(context -> create(
+                                                    context,
+                                                    BoolArgumentType.getBool(context, "exclusive_input"),
+                                                    BoolArgumentType.getBool(context, QteCommandSchema.HIDE_HUD_ARGUMENT),
+                                                    StringArgumentType.getString(context, "texture")
+                                                ))))))))))))
+            .then(Commands.literal("edit")
+                .requires(source -> source.hasPermission(2))
+                .then(Commands.argument("id", StringArgumentType.word()).suggests(QteCommands::suggestIds)
+                    .then(Commands.argument("type", StringArgumentType.word()).suggests(QteCommands::suggestTypes)
+                        .then(Commands.argument(QteCommandSchema.INPUTS_ARGUMENT, StringArgumentType.string())
+                            .suggests(QteCommands::suggestInputs)
+                            .then(Commands.argument("duration", DoubleArgumentType.doubleArg(0.1, 300))
+                                .then(Commands.argument(QteCommandSchema.SUCCESS_RESULT_ARGUMENT, StringArgumentType.string())
+                                  .then(Commands.argument(QteCommandSchema.FAILURE_RESULT_ARGUMENT, StringArgumentType.string())
+                                    .executes(context -> edit(context, false, false, null))
+                                    .then(Commands.argument("exclusive_input", BoolArgumentType.bool())
+                                        .executes(context -> edit(
                                             context,
+                                            BoolArgumentType.getBool(context, "exclusive_input"),
                                             false,
-                                            StringArgumentType.getString(context, "texture")
-                                        )))))))))
+                                            null
+                                        ))
+                                        .then(Commands.argument(QteCommandSchema.HIDE_HUD_ARGUMENT, BoolArgumentType.bool())
+                                            .executes(context -> edit(
+                                                context,
+                                                BoolArgumentType.getBool(context, "exclusive_input"),
+                                                BoolArgumentType.getBool(context, QteCommandSchema.HIDE_HUD_ARGUMENT),
+                                                null
+                                            ))
+                                            .then(Commands.argument("texture", StringArgumentType.string())
+                                                .executes(context -> edit(
+                                                    context,
+                                                    BoolArgumentType.getBool(context, "exclusive_input"),
+                                                    BoolArgumentType.getBool(context, QteCommandSchema.HIDE_HUD_ARGUMENT),
+                                                    StringArgumentType.getString(context, "texture")
+                                                ))))))))))))
             .then(Commands.literal("play")
                 .then(Commands.argument("id", StringArgumentType.word()).suggests(QteCommands::suggestIds)
                     .executes(QteCommands::play)))
@@ -63,17 +99,14 @@ public final class QteCommands {
         );
     }
 
-    private static int create(CommandContext<CommandSourceStack> context, boolean exclusiveInput, String texture) {
+    private static int create(
+        CommandContext<CommandSourceStack> context,
+        boolean exclusiveInput,
+        boolean hideHud,
+        String texture
+    ) {
         try {
-            QteDefinition definition = QteDefinition.create(
-                StringArgumentType.getString(context, "id"),
-                QteType.parse(StringArgumentType.getString(context, "type")),
-                StringArgumentType.getString(context, QteCommandSchema.KEY_ARGUMENT),
-                DoubleArgumentType.getDouble(context, "duration"),
-                StringArgumentType.getString(context, "result"),
-                exclusiveInput,
-                texture
-            );
+            QteDefinition definition = readDefinition(context, exclusiveInput, hideHud, texture);
             QteSavedData data = data(context);
             if (!data.add(definition)) {
                 context.getSource().sendFailure(Component.translatable("command.qte.duplicate", definition.id()));
@@ -85,6 +118,45 @@ public final class QteCommands {
             context.getSource().sendFailure(Component.literal(error.getMessage()));
             return 0;
         }
+    }
+
+    private static int edit(
+        CommandContext<CommandSourceStack> context,
+        boolean exclusiveInput,
+        boolean hideHud,
+        String texture
+    ) {
+        try {
+            QteDefinition definition = readDefinition(context, exclusiveInput, hideHud, texture);
+            if (!data(context).replace(definition)) {
+                context.getSource().sendFailure(Component.translatable("command.qte.missing", definition.id()));
+                return 0;
+            }
+            context.getSource().sendSuccess(() -> Component.translatable("command.qte.edited", definition.id()), true);
+            return 1;
+        } catch (IllegalArgumentException error) {
+            context.getSource().sendFailure(Component.literal(error.getMessage()));
+            return 0;
+        }
+    }
+
+    private static QteDefinition readDefinition(
+        CommandContext<CommandSourceStack> context,
+        boolean exclusiveInput,
+        boolean hideHud,
+        String texture
+    ) {
+        return QteDefinition.create(
+            StringArgumentType.getString(context, "id"),
+            QteType.parse(StringArgumentType.getString(context, "type")),
+            StringArgumentType.getString(context, QteCommandSchema.INPUTS_ARGUMENT),
+            DoubleArgumentType.getDouble(context, "duration"),
+            StringArgumentType.getString(context, QteCommandSchema.SUCCESS_RESULT_ARGUMENT),
+            StringArgumentType.getString(context, QteCommandSchema.FAILURE_RESULT_ARGUMENT),
+            exclusiveInput,
+            hideHud,
+            texture
+        );
     }
 
     private static int play(CommandContext<CommandSourceStack> context) {
@@ -139,6 +211,13 @@ public final class QteCommands {
             java.util.Arrays.stream(QteType.values()).map(type -> type.name().toLowerCase(Locale.ROOT)),
             builder
         );
+    }
+
+    private static CompletableFuture<Suggestions> suggestInputs(
+        CommandContext<CommandSourceStack> context,
+        SuggestionsBuilder builder
+    ) {
+        return SharedSuggestionProvider.suggest(QteCommandSchema.inputSuggestions(builder.getRemaining()), builder);
     }
 
     private static CompletableFuture<Suggestions> suggestIds(
