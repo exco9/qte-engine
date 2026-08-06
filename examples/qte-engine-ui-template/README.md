@@ -1,37 +1,30 @@
-# QTE Engine UI — template de resource pack
+# QTE Engine UI resource pack template
 
-Ce dossier est un resource pack Minecraft 1.21.1 directement utilisable. Il remplace les sprites du HUD via les identifiants de ressources standards du mod; aucune modification Java n'est nécessaire.
+This folder is a ready-to-use Minecraft 1.21.1 resource pack. It replaces QTE Engine HUD sprites through standard resource locations; no Java changes are required.
 
 ## Installation
 
-1. Copier le dossier `qte-engine-ui-template` dans `.minecraft/resourcepacks/`.
-2. Le renommer librement.
-3. Modifier les PNG dans `assets/qte_engine/textures/gui/sprites/`.
-4. Activer le pack au-dessus des ressources par défaut dans Minecraft.
-5. Recharger les ressources avec `F3 + T` après chaque export.
+1. Copy `qte-engine-ui-template` into `.minecraft/resourcepacks/`.
+2. Edit the PNG files in `assets/qte_engine/textures/gui/sprites/`.
+3. Enable the pack above the default resources in Minecraft.
+4. Press `F3 + T` after exporting changes.
 
-Le dossier peut aussi être compressé en ZIP. Dans ce cas, `pack.mcmeta` doit rester à la racine du ZIP, pas dans un sous-dossier supplémentaire.
+The folder can also be distributed as a ZIP. Keep `pack.mcmeta` at the ZIP root.
 
-## Sprites remplaçables
+## Sprites
 
-- `qte_hud_frame.png` — 16×16 px, cadre extensible. Garder les coins et bordures dans les 4 px extérieurs. Son fichier `.png.mcmeta` active le nine-slice.
-- `qte_keycap.png` — 12×12 px, touche extensible. Garder les coins et bordures dans les 4 px extérieurs. Son fichier `.png.mcmeta` active le nine-slice.
-- `qte_marker.png` — 5×11 px, marqueur à taille fixe.
+- `qte_hud_frame.png`: 16×16 resizable frame. Keep corners and borders inside the outer 4 pixels.
+- `qte_keycap.png`: 12×12 resizable keycap. Keep corners and borders inside the outer 4 pixels.
+- `qte_marker.png`: fixed 5×11 marker.
 
-Conserver transparence PNG et contours nets. Éviter filtrage, flou et redimensionnement non entier. Les fichiers `sources/*.aseprite` sont les sources éditables; exporter leurs PNG vers le chemin `assets/.../sprites/` correspondant.
+Keep PNG transparency and crisp pixel edges. The matching `.png.mcmeta` files define nine-slice scaling. Editable files are stored in `sources/*.aseprite`; export each PNG to its matching path under `assets/`.
 
-## Texture propre à un QTE
+## Custom QTE image
 
-L'argument optionnel `texture` accepte aussi une image fournie par ce pack. Exemple de commande :
-
-```mcfunction
-/qte create rune observation space 3 "say @s réussi" "say @s échoué" false false qte_custom:textures/gui/rune.png
-```
-
-Le fichier correspondant doit se trouver ici :
+Place an image at a resource path such as:
 
 ```text
 assets/qte_custom/textures/gui/rune.png
 ```
 
-Cette illustration est rendue en 40×40 px. Une image carrée évite la déformation.
+Then use `qte_custom:textures/gui/rune.png` as the command's optional `texture` argument. Custom images are rendered at 40×40, so square textures work best.
