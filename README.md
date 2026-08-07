@@ -1,4 +1,5 @@
-# QTE Engine
+<img width="850" height="85" alt="logo qte mod (1)" src="https://github.com/user-attachments/assets/a1a0c6aa-d102-42d9-971c-5eab49acfdb0" />
+
 
 A NeoForge 1.21.1 mod for server-authoritative quick-time events with persistent definitions and a configurable HUD.
 
