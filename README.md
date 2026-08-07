@@ -23,7 +23,7 @@ Commands containing spaces must be quoted. A leading `/` is optional inside resu
 
 ## Examples
 
-<img width="406" height="116" alt="uiqte" src="https://github.com/user-attachments/assets/8e1c5afe-0e21-44ba-9898-fee15e033190" />
+<img width="406" height="116" alt="uiqteengine" src="https://github.com/user-attachments/assets/ba59518f-9a29-4ffa-be6a-3b5b1cfc0980" />
 
 ```mcfunction
 /qte create 1 hold space 2.5 "say @s succeed" "say @s failed" true true
