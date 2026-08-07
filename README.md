@@ -1,60 +1,65 @@
 # QTE Engine
 
-Mod NeoForge pour Minecraft 1.21.1. Définitions persistantes par monde, HUD client, résultats exécutés côté serveur.
+A NeoForge 1.21.1 mod for server-authoritative quick-time events with persistent definitions and a configurable HUD.
 
-## Commandes
+## Commands
 
 ```text
-/qte create <id> <type> <key> <durée_secondes> <commande_résultat> [exclusive_input] [texture]
+/qte create <id> <type> <inputs> <duration> <success_command> <failure_command> [exclusive_input] [hide_hud] [texture]
+/qte edit <id> <type> <inputs> <duration> <success_command> <failure_command> [exclusive_input] [hide_hud] [texture]
 /qte play <id>
 /qte remove <id>
 /qte list
 /qte types
 ```
 
-`create` et `remove` demandent permission opérateur niveau 2. `play`, `list` et `types` sont accessibles aux joueurs. Une commande résultat contenant des espaces doit être entre guillemets. `/` initial facultatif. `%player%` est remplacé par nom du joueur ayant réussi.
+`create`, `edit`, and `remove` require operator permission level 2. `play` must be run by a player. Duration is expressed in seconds and must be between `0.1` and `300`.
 
-`exclusive_input` vaut `false` par défaut. Avec `true`, clavier, boutons, molette et mouvement caméra sont réservés au QTE jusqu'à son résultat; Minecraft ne reçoit pas ces entrées.
+Commands containing spaces must be quoted. A leading `/` is optional inside result commands. Both `@s` and `%player%` target the player running the QTE.
 
-Exemples:
+- `exclusive_input`: blocks normal keyboard and mouse handling while the QTE is active. Default: `false`.
+- `hide_hud`: temporarily hides the vanilla HUD while keeping the QTE visible. Default: `false`.
+- `texture`: optional resource location for a 40×40 QTE image. Both boolean arguments must be provided before it.
+
+## Examples
+
+<img width="406" height="116" alt="uiqte" src="https://github.com/user-attachments/assets/8e1c5afe-0e21-44ba-9898-fee15e033190" />
 
 ```mcfunction
-/qte create esquive reaction space 2.5 "say %player% a esquivé" true
-/qte create rune input_sequence w,a,s,d 6 "function histoire:rune_reussie" true qte_engine:textures/gui/rune.png
-/qte create serrure mash e 4 "give %player% minecraft:tripwire_hook"
-/qte create parade timing mouse.left 2 "damage %player% 0"
-/qte play esquive
-/qte remove esquive
+/qte create 1 hold space 2.5 "say @s succeed" "say @s failed" true true
+/qte create rune input_sequence "w,a,s,d" 6 "say @s succeed" "say @s failed" true false qte_engine:textures/gui/rune.png
+/qte play 1
 ```
 
-Touches acceptées sous forme courte (`space`, `w`, `left_shift`) ou identifiant Minecraft (`key.keyboard.space`, `key.mouse.left`). Séparer séquences par virgules, sans espaces.
+Inputs accept short names such as `space`, `w`, and `left_shift`, or complete Minecraft identifiers such as `key.keyboard.space` and `key.mouse.left`. Mouse aliases include `m1`, `m2`, `m3`, `mouse1`, `mouse2`, and `mouse3`.
 
-Les lettres courtes (`z`, `w`, `a`...) suivent automatiquement disposition du joueur. Ainsi `z` demande touche imprimée Z sur AZERTY comme QWERTY. HUD indique disposition détectée (`AZERTY`, `QWERTZ`, `QWERTY` ou `CUSTOM`). Utiliser identifiant complet comme `key.keyboard.w` pour cibler position physique Minecraft indépendamment disposition.
+Separate multiple inputs with commas. `input_sequence`, `reaction_choice`, `memory`, and `rhythm` require at least two inputs; every other type accepts exactly one. Single-letter inputs follow the player's keyboard layout.
 
-## Types et règles
+## QTE types
 
-- `reaction`, `observation`, `attention`: appuyer touche attendue avant timeout.
-- `reaction_choice`: première touche de liste `key` est bonne réponse; autres choix échouent.
-- `timing`, `dialogue_timing`: appuyer dans zone verte du timing bar.
-- `hold`: maintenir touche pendant 60 % durée.
-- `mash`: appuyer rapidement; objectif dépend durée, minimum 5 pressions.
-- `input_sequence`, `direction`, `pattern`: reproduire séquence dans ordre.
-- `memory`: mémoriser séquence avant masquage, puis la reproduire.
-- `rhythm`: saisir chaque touche sur marque temporelle correspondante.
-- `analog_precision`, `aim`, `tracking`, `balance`: appuyer touche configurée lorsque curseur mobile atteint zone centrale.
+- `observation`: press the expected input before time expires.
+- `reaction_choice`: select the first input from the displayed choices. (WIP)
+- `hold`: hold the configured input for 60% of the duration.
+- `mash`: press repeatedly until the target is reached.
+- `input_sequence`: enter every input in order.
+- `balance`: press when the moving marker reaches the center.
+- `aim`: move the cursor into the fixed target, then press the configured input.
+- `tracking`: hold the configured input while following the moving target.
 
-Mauvaise touche configurée ou relâchement trop tôt provoque échec. Expiration ne lance jamais commande résultat.
+Success, failure, and timeout results are validated and executed by the server.
 
-## Textures
+## UI textures
 
-Texture optionnelle utilise identifiant de ressource complet, par exemple `mon_pack:textures/gui/qte_rune.png`. Image affichée en 48×48. Sans texture, HUD compact standard.
+The HUD sprites can be replaced through a normal Minecraft resource pack. A ready-to-edit template with PNG and Aseprite sources is available in [`examples/qte-engine-ui-template`](examples/qte-engine-ui-template/).
+
+Custom QTE images use full resource locations such as `my_pack:textures/gui/rune.png`.
 
 ## Build
 
-Java 21 requis:
+Java 21 is required.
 
 ```powershell
 .\gradlew.bat clean test build
 ```
 
-JAR produit: `build/libs/qte_engine-0.3.0.jar`.
+The built JAR is written to `build/libs/qte_engine-0.3.0.jar`.

@@ -17,6 +17,7 @@ public record StartQtePayload(
     List<String> keys,
     int durationTicks,
     boolean exclusiveInput,
+    boolean hideHud,
     String texture
 ) implements CustomPacketPayload {
     public static final Type<StartQtePayload> TYPE = new Type<>(
@@ -33,6 +34,7 @@ public record StartQtePayload(
             buffer.readList(value -> value.readUtf(64)),
             buffer.readVarInt(),
             buffer.readBoolean(),
+            buffer.readBoolean(),
             buffer.readBoolean() ? buffer.readUtf(256) : null
         );
     }
@@ -45,6 +47,7 @@ public record StartQtePayload(
             definition.keys(),
             definition.durationTicks(),
             definition.exclusiveInput(),
+            definition.hideHud(),
             definition.texture()
         );
     }
@@ -56,6 +59,7 @@ public record StartQtePayload(
         buffer.writeCollection(keys, (target, value) -> target.writeUtf(value, 64));
         buffer.writeVarInt(durationTicks);
         buffer.writeBoolean(exclusiveInput);
+        buffer.writeBoolean(hideHud);
         buffer.writeBoolean(texture != null);
         if (texture != null) {
             buffer.writeUtf(texture, 256);

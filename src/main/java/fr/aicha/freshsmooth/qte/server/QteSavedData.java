@@ -12,7 +12,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.saveddata.SavedData;
 
 public final class QteSavedData extends SavedData {
-    private static final int FORMAT_VERSION = 3;
+    private static final int FORMAT_VERSION = 4;
     private static final String FILE_NAME = "qte_engine_definitions";
     private static final Factory<QteSavedData> FACTORY = new Factory<>(QteSavedData::new, QteSavedData::load);
 
@@ -42,6 +42,14 @@ public final class QteSavedData extends SavedData {
         return changed;
     }
 
+    public boolean replace(QteDefinition definition) {
+        boolean changed = registry.replace(definition);
+        if (changed) {
+            setDirty();
+        }
+        return changed;
+    }
+
     @Override
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
         tag.putInt("formatVersion", FORMAT_VERSION);
@@ -53,7 +61,11 @@ public final class QteSavedData extends SavedData {
             entry.putString("keys", String.join(",", definition.keys()));
             entry.putInt("durationTicks", definition.durationTicks());
             entry.putString("resultCommand", definition.resultCommand());
+            if (definition.failureCommand() != null) {
+                entry.putString("failureCommand", definition.failureCommand());
+            }
             entry.putBoolean("exclusiveInput", definition.exclusiveInput());
+            entry.putBoolean("hideHud", definition.hideHud());
             if (definition.texture() != null) {
                 entry.putString("texture", definition.texture());
             }
@@ -71,6 +83,9 @@ public final class QteSavedData extends SavedData {
             CompoundTag entry = definitions.getCompound(index);
             try {
                 String texture = entry.contains("texture", Tag.TAG_STRING) ? entry.getString("texture") : null;
+                String failureCommand = entry.contains("failureCommand", Tag.TAG_STRING)
+                    ? entry.getString("failureCommand")
+                    : null;
                 String serializedKeys = entry.contains("keys", Tag.TAG_STRING)
                     ? entry.getString("keys")
                     : entry.getString("pattern");
@@ -82,7 +97,9 @@ public final class QteSavedData extends SavedData {
                         .toList(),
                     entry.getInt("durationTicks"),
                     entry.getString("resultCommand"),
+                    failureCommand,
                     entry.getBoolean("exclusiveInput"),
+                    entry.getBoolean("hideHud"),
                     texture
                 ));
             } catch (IllegalArgumentException ignored) {
