@@ -3,6 +3,7 @@ package fr.xec9.qte.client;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import fr.xec9.qte.domain.QteDefinition;
+import fr.xec9.qte.domain.QteBalanceModel;
 import fr.xec9.qte.domain.QteInput;
 import fr.xec9.qte.domain.QteJudge;
 import fr.xec9.qte.domain.QtePointerModel;
@@ -16,20 +17,25 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.ChatScreen;
+import net.minecraft.client.gui.screens.PauseScreen;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.CustomizeGuiOverlayEvent;
-import net.neoforged.neoforge.client.event.RenderGuiEvent;
+import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.lwjgl.glfw.GLFW;
 
 @EventBusSubscriber(modid = QteEngine.MOD_ID, value = Dist.CLIENT)
 public final class QteClient {
+    private static final ResourceLocation HUD_LAYER = ResourceLocation.fromNamespaceAndPath(QteEngine.MOD_ID, "hud");
     private static ClientSession active;
 
     private QteClient() {}
@@ -45,7 +51,10 @@ public final class QteClient {
             null,
             payload.exclusiveInput(),
             payload.hideHud(),
-            payload.texture()
+            payload.texture(),
+            payload.trackingSpeed(),
+            payload.aimX(),
+            payload.aimY()
         );
         active = new ClientSession(payload, definition);
         if (blocksGameInput()) {
@@ -56,7 +65,16 @@ public final class QteClient {
     public static boolean blocksGameInput() {
         return fr.xec9.qte.domain.InputCapturePolicy.blocksGameInput(
             active != null && !active.judge().status().terminal(),
-            active != null && active.definition().exclusiveInput()
+            active != null && active.definition().exclusiveInput(),
+            Minecraft.getInstance().screen instanceof PauseScreen
+        );
+    }
+
+    public static boolean blocksKeyPress(int key) {
+        return fr.xec9.qte.domain.InputCapturePolicy.blocksKeyPress(
+            active != null && !active.judge().status().terminal(),
+            active != null && active.definition().exclusiveInput(),
+            key
         );
     }
 
@@ -100,28 +118,29 @@ public final class QteClient {
 
     @SubscribeEvent
     public static void repositionChat(CustomizeGuiOverlayEvent.Chat event) {
-        if (active == null) {
-            return;
-        }
-        int chatBottom = QteHudModel.chatBottom(
-            event.getGuiGraphics().guiWidth(),
-            event.getGuiGraphics().guiHeight()
-        );
-        event.setPosY(Math.min(event.getPosY(), chatBottom));
-    }
-
-    @SubscribeEvent
-    public static void renderHud(RenderGuiEvent.Post event) {
         if (active != null) {
-            QteHud.render(event.getGuiGraphics(), active);
+            int chatBottom = QteHudModel.chatBottom(
+                event.getGuiGraphics().guiWidth(), event.getGuiGraphics().guiHeight()
+            );
+            event.setPosY(Math.min(event.getPosY(), chatBottom));
         }
     }
 
     @SubscribeEvent
     public static void renderHudAboveFocusedChat(ScreenEvent.Render.Post event) {
         if (active != null && event.getScreen() instanceof ChatScreen) {
-            QteHud.render(event.getGuiGraphics(), active);
+            QteHud.render(event.getGuiGraphics(), active, event.getPartialTick());
         }
+    }
+
+    private static void renderHudLayer(GuiGraphics graphics, DeltaTracker deltaTracker) {
+        if (active != null && !(Minecraft.getInstance().screen instanceof ChatScreen)) {
+            QteHud.render(graphics, active, deltaTracker.getGameTimeDeltaPartialTick(false));
+        }
+    }
+
+    public static void registerGuiLayers(RegisterGuiLayersEvent event) {
+        event.registerAboveAll(HUD_LAYER, QteClient::renderHudLayer);
     }
 
     private static void clearActive() {
@@ -141,14 +160,12 @@ public final class QteClient {
         private long elapsed;
         private boolean sent;
         private int lingerTicks;
-        private QtePointerModel.Point pointer = new QtePointerModel.Point(0, 0);
-        private double pendingMouseX;
-        private double pendingMouseY;
+        private final QtePointerFrameState pointerState = new QtePointerFrameState();
 
         ClientSession(StartQtePayload payload, QteDefinition definition) {
             this.payload = payload;
             this.definition = definition;
-            this.judge = new QteJudge(definition);
+            this.judge = new QteJudge(definition, sessionSeed());
             this.hudVisibility = new QteHudVisibility(definition.hideHud());
             Minecraft minecraft = Minecraft.getInstance();
             minecraft.options.hideGui = hudVisibility.begin(minecraft.options.hideGui);
@@ -174,8 +191,8 @@ public final class QteClient {
                 boolean wasDown = previous.getOrDefault(name, false);
                 if (down != wasDown) {
                     QteInput input;
-                    if (isAutomaticPrecision() && down) {
-                        input = QteInput.axis(markerDistance());
+                    if (definition.type() == QteType.BALANCE && down) {
+                        input = QteInput.axis(balanceDistance());
                     } else {
                         input = down ? QteInput.press(name) : QteInput.release(name);
                     }
@@ -223,19 +240,26 @@ public final class QteClient {
         }
 
         boolean lingerComplete() {
-            return lingerTicks >= 20;
+            return lingerTicks >= 8;
         }
 
-        double markerDistance() {
-            return Math.cos(elapsed * 0.18);
+        int lingerTicks() {
+            return lingerTicks;
+        }
+
+        boolean primaryKeyDown() {
+            return !definition.keys().isEmpty() && previous.getOrDefault(definition.keys().getFirst(), false);
         }
 
         QtePointerModel.Point pointer() {
-            return pointer;
+            return pointerState.pointer();
         }
 
         QtePointerModel.Point pointerTarget() {
-            return QtePointerModel.target(definition.type(), definition.id(), elapsed, definition.durationTicks());
+            return QtePointerModel.target(
+                definition.type(), sessionSeed(), elapsed, definition.durationTicks(),
+                definition.trackingSpeed(), definition.aimX(), definition.aimY()
+            );
         }
 
         double timeRemaining() {
@@ -246,27 +270,23 @@ public final class QteClient {
             if (!usesPointer() || !Double.isFinite(deltaX) || !Double.isFinite(deltaY)) {
                 return;
             }
-            pendingMouseX += deltaX;
-            pendingMouseY += deltaY;
+            Minecraft minecraft = Minecraft.getInstance();
+            pointerState.move(
+                deltaX,
+                deltaY,
+                minecraft.options.sensitivity().get(),
+                minecraft.options.invertYMouse().get()
+            );
         }
 
         private void flushMouseMovement() {
             if (!usesPointer()) {
                 return;
             }
-            if (pendingMouseX != 0 || pendingMouseY != 0) {
-                Minecraft minecraft = Minecraft.getInstance();
-                pointer = QtePointerModel.move(
-                    pointer,
-                    pendingMouseX,
-                    pendingMouseY,
-                    minecraft.options.sensitivity().get(),
-                    minecraft.options.invertYMouse().get()
-                );
+            QtePointerModel.Point sample = pointerState.consumePendingSample();
+            if (sample != null) {
+                acceptAndSend(QteInput.pointer(sample.x(), sample.y()));
             }
-            pendingMouseX = 0;
-            pendingMouseY = 0;
-            acceptAndSend(QteInput.pointer(pointer.x(), pointer.y()));
         }
 
         private void acceptAndSend(QteInput input) {
@@ -278,11 +298,15 @@ public final class QteClient {
             return definition.type() == QteType.AIM || definition.type() == QteType.TRACKING;
         }
 
-        private boolean isAutomaticPrecision() {
-            return switch (definition.type()) {
-                case ANALOG_PRECISION, BALANCE -> true;
-                default -> false;
-            };
+        long sessionSeed() {
+            return payload.sessionId().getMostSignificantBits() ^ payload.sessionId().getLeastSignificantBits();
+        }
+
+        double balanceDistance() {
+            return QteBalanceModel.angularDistance(
+                QteBalanceModel.needlePhase(elapsed, definition.durationTicks()),
+                QteBalanceModel.targetPhase(sessionSeed())
+            );
         }
 
         private static boolean isDown(String name) {

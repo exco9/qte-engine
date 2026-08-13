@@ -18,7 +18,7 @@ abstract class KeyboardHandlerMixin {
         int modifiers,
         CallbackInfo callback
     ) {
-        if (QteClient.blocksGameInput()) {
+        if (QteClient.blocksKeyPress(key)) {
             callback.cancel();
         }
     }

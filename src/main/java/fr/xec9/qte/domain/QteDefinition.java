@@ -16,15 +16,17 @@ public record QteDefinition(
     String failureCommand,
     boolean exclusiveInput,
     boolean hideHud,
-    String texture
+    String texture,
+    double trackingSpeed,
+    Double aimX,
+    Double aimY
 ) {
+    public static final double DEFAULT_TRACKING_SPEED = 0.45;
     private static final Pattern ID = Pattern.compile("[a-z0-9_.-]+");
     private static final Pattern RESOURCE = Pattern.compile("[a-z0-9_.-]+:[a-z0-9_./-]+");
     private static final EnumSet<QteType> MULTI_INPUT = EnumSet.of(
         QteType.INPUT_SEQUENCE,
-        QteType.REACTION_CHOICE,
-        QteType.MEMORY,
-        QteType.RHYTHM
+        QteType.REACTION_CHOICE
     );
 
     public QteDefinition {
@@ -52,6 +54,16 @@ public record QteDefinition(
         }
         if (texture != null && !RESOURCE.matcher(texture).matches()) {
             throw new IllegalArgumentException("Invalid texture resource: " + texture);
+        }
+        if (!Double.isFinite(trackingSpeed) || trackingSpeed < 0.1 || trackingSpeed > 2.0) {
+            throw new IllegalArgumentException("Tracking speed must be between 0.1 and 2.0");
+        }
+        if ((aimX == null) != (aimY == null)) {
+            throw new IllegalArgumentException("Aim coordinates must both be present or absent");
+        }
+        if (aimX != null && (!Double.isFinite(aimX) || !Double.isFinite(aimY)
+            || Math.abs(aimX) > 0.92 || Math.abs(aimY) > 0.92)) {
+            throw new IllegalArgumentException("Aim coordinates must be between -0.92 and 0.92");
         }
     }
 
@@ -109,7 +121,38 @@ public record QteDefinition(
             failureCommand,
             exclusiveInput,
             hideHud,
-            normalizedTexture
+            normalizedTexture,
+            DEFAULT_TRACKING_SPEED,
+            null,
+            null
+        );
+    }
+
+    public QteDefinition withTrackingSpeed(double speed) {
+        if (type != QteType.TRACKING) {
+            throw new IllegalStateException("Tracking speed only applies to tracking QTEs");
+        }
+        return copy(speed, aimX, aimY);
+    }
+
+    public QteDefinition withAimPosition(double x, double y) {
+        if (type != QteType.AIM) {
+            throw new IllegalStateException("Aim position only applies to aim QTEs");
+        }
+        return copy(trackingSpeed, x, y);
+    }
+
+    public QteDefinition withRandomAimPosition() {
+        if (type != QteType.AIM) {
+            throw new IllegalStateException("Aim position only applies to aim QTEs");
+        }
+        return copy(trackingSpeed, null, null);
+    }
+
+    private QteDefinition copy(double speed, Double x, Double y) {
+        return new QteDefinition(
+            id, type, keys, durationTicks, resultCommand, failureCommand,
+            exclusiveInput, hideHud, texture, speed, x, y
         );
     }
 

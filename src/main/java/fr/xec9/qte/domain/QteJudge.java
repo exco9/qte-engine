@@ -8,30 +8,27 @@ public final class QteJudge {
         QteType.REACTION_CHOICE,
         QteType.OBSERVATION
     );
-    private static final Set<QteType> TIMED = EnumSet.of(QteType.TIMING, QteType.DIALOGUE_TIMING);
-    private static final Set<QteType> SEQUENCE = EnumSet.of(
-        QteType.INPUT_SEQUENCE,
-        QteType.MEMORY
-    );
-    private static final Set<QteType> PRECISION = EnumSet.of(
-        QteType.ANALOG_PRECISION,
-        QteType.BALANCE
-    );
+    private static final Set<QteType> SEQUENCE = EnumSet.of(QteType.INPUT_SEQUENCE);
 
     private final QteDefinition definition;
+    private final long sessionSeed;
     private QteStatus status = QteStatus.ACTIVE;
     private int index;
     private int presses;
     private long heldSince = -1;
     private long elapsedTicks;
-    private double axisDistance = 1;
     private QtePointerModel.Point pointer = new QtePointerModel.Point(0, 0);
     private boolean trackingHeld;
     private int trackingTicks;
     private long lastTrackingTick = -1;
 
     public QteJudge(QteDefinition definition) {
+        this(definition, definition.id().hashCode());
+    }
+
+    public QteJudge(QteDefinition definition, long sessionSeed) {
         this.definition = definition;
+        this.sessionSeed = sessionSeed;
     }
 
     public QteStatus accept(QteInput input, long elapsedTicks) {
@@ -45,14 +42,12 @@ public final class QteJudge {
 
         switch (strategy(definition.type())) {
             case SINGLE -> acceptSingle(input);
-            case TIMING -> acceptTimed(input);
             case SEQUENCE -> acceptSequence(input);
-            case PRECISION -> acceptPrecision(input);
+            case BALANCE -> acceptBalance(input);
             case AIM -> acceptAim(input);
             case TRACKING -> acceptTracking(input);
             case HOLD -> acceptHold(input);
             case MASH -> acceptMash(input);
-            case RHYTHM -> acceptRhythm(input);
         }
         return status;
     }
@@ -66,9 +61,12 @@ public final class QteJudge {
             lastTrackingTick = this.elapsedTicks;
             QtePointerModel.Point target = QtePointerModel.target(
                 QteType.TRACKING,
-                definition.id(),
+                sessionSeed,
                 this.elapsedTicks,
-                definition.durationTicks()
+                definition.durationTicks(),
+                definition.trackingSpeed(),
+                definition.aimX(),
+                definition.aimY()
             );
             if (trackingHeld && QtePointerModel.distance(pointer, target) <= QtePointerModel.TRACKING_RADIUS) {
                 trackingTicks++;
@@ -95,7 +93,7 @@ public final class QteJudge {
             return 1;
         }
         QteType type = definition.type();
-        if (SEQUENCE.contains(type) || type == QteType.RHYTHM) {
+        if (SEQUENCE.contains(type)) {
             return clamp((double) index / definition.keys().size());
         }
         if (type == QteType.MASH) {
@@ -104,8 +102,12 @@ public final class QteJudge {
         if (type == QteType.HOLD) {
             return heldSince < 0 ? 0 : clamp((double) (elapsedTicks - heldSince) / holdTarget());
         }
-        if (PRECISION.contains(type)) {
-            return clamp(1 - Math.abs(axisDistance));
+        if (type == QteType.BALANCE) {
+            double distance = QteBalanceModel.angularDistance(
+                QteBalanceModel.needlePhase(elapsedTicks, definition.durationTicks()),
+                QteBalanceModel.targetPhase(sessionSeed)
+            );
+            return clamp(1 - distance / 0.5);
         }
         if (type == QteType.AIM) {
             return clamp(1 - pointerDistance() / 1.5);
@@ -135,23 +137,24 @@ public final class QteJudge {
     public static Strategy strategy(QteType type) {
         return switch (type) {
             case REACTION_CHOICE, OBSERVATION -> Strategy.SINGLE;
-            case TIMING, DIALOGUE_TIMING -> Strategy.TIMING;
-            case INPUT_SEQUENCE, MEMORY -> Strategy.SEQUENCE;
-            case ANALOG_PRECISION, BALANCE -> Strategy.PRECISION;
+            case INPUT_SEQUENCE -> Strategy.SEQUENCE;
+            case BALANCE -> Strategy.BALANCE;
             case AIM -> Strategy.AIM;
             case TRACKING -> Strategy.TRACKING;
             case HOLD -> Strategy.HOLD;
             case MASH -> Strategy.MASH;
-            case RHYTHM -> Strategy.RHYTHM;
         };
     }
 
     public double pointerDistance() {
         QtePointerModel.Point target = QtePointerModel.target(
             definition.type(),
-            definition.id(),
+            sessionSeed,
             elapsedTicks,
-            definition.durationTicks()
+            definition.durationTicks(),
+            definition.trackingSpeed(),
+            definition.aimX(),
+            definition.aimY()
         );
         return QtePointerModel.distance(pointer, target);
     }
@@ -160,16 +163,6 @@ public final class QteJudge {
         if (input.kind() == QteInput.Kind.PRESS) {
             status = expectedKey().equals(input.key()) ? QteStatus.SUCCESS : QteStatus.FAILURE;
         }
-    }
-
-    private void acceptTimed(QteInput input) {
-        if (input.kind() != QteInput.Kind.PRESS) {
-            return;
-        }
-        double normalizedTime = (double) elapsedTicks / definition.durationTicks();
-        status = expectedKey().equals(input.key()) && Math.abs(normalizedTime - 0.70) <= 0.12
-            ? QteStatus.SUCCESS
-            : QteStatus.FAILURE;
     }
 
     private void acceptSequence(QteInput input) {
@@ -186,14 +179,13 @@ public final class QteJudge {
         }
     }
 
-    private void acceptPrecision(QteInput input) {
+    private void acceptBalance(QteInput input) {
         if (input.kind() != QteInput.Kind.AXIS) {
             return;
         }
-        axisDistance = Math.abs(input.value());
-        if (axisDistance <= 0.15) {
-            status = QteStatus.SUCCESS;
-        }
+        status = Math.abs(input.value()) <= QteBalanceModel.SUCCESS_HALF_WIDTH
+            ? QteStatus.SUCCESS
+            : QteStatus.FAILURE;
     }
 
     private void acceptAim(QteInput input) {
@@ -245,22 +237,6 @@ public final class QteJudge {
         }
     }
 
-    private void acceptRhythm(QteInput input) {
-        if (input.kind() != QteInput.Kind.PRESS) {
-            return;
-        }
-        double target = (double) (index + 1) / (definition.keys().size() + 1);
-        double actual = (double) elapsedTicks / definition.durationTicks();
-        if (!definition.keys().get(index).equals(input.key()) || Math.abs(actual - target) > 0.12) {
-            status = QteStatus.FAILURE;
-            return;
-        }
-        index++;
-        if (index == definition.keys().size()) {
-            status = QteStatus.SUCCESS;
-        }
-    }
-
     private String expectedKey() {
         return definition.keys().getFirst();
     }
@@ -282,13 +258,11 @@ public final class QteJudge {
 
     public enum Strategy {
         SINGLE,
-        TIMING,
         SEQUENCE,
-        PRECISION,
+        BALANCE,
         AIM,
         TRACKING,
         HOLD,
-        MASH,
-        RHYTHM
+        MASH
     }
 }

@@ -30,14 +30,34 @@ public final class QtePointerModel {
         );
     }
 
-    public static Point target(QteType type, String id, long elapsedTicks, int durationTicks) {
+    public static Point target(QteType type, long sessionSeed, long elapsedTicks, int durationTicks) {
+        return target(type, sessionSeed, elapsedTicks, durationTicks,
+            QteDefinition.DEFAULT_TRACKING_SPEED, null, null);
+    }
+
+    public static Point target(
+        QteType type,
+        long sessionSeed,
+        long elapsedTicks,
+        int durationTicks,
+        double trackingSpeed,
+        Double aimX,
+        Double aimY
+    ) {
         if (type == QteType.TRACKING) {
-            double phase = Math.max(0, elapsedTicks) / (double) Math.max(1, durationTicks) * Math.PI * 3.0;
-            return new Point(Math.sin(phase) * 0.62, Math.cos(phase * 0.73) * 0.42);
+            double seedPhase = unit(mix(sessionSeed ^ 0x9E3779B97F4A7C15L)) * Math.PI * 2;
+            double phase = Math.max(0, elapsedTicks) / (double) Math.max(1, durationTicks)
+                * Math.PI * 3.0 * trackingSpeed;
+            return new Point(
+                Math.sin(phase + seedPhase) * 0.90,
+                Math.cos(phase * 0.73 + seedPhase * 1.31) * 0.88
+            );
         }
-        int hash = id == null ? 0 : id.hashCode();
-        double x = ((hash & 0xFFFF) / 65535.0) * 1.10 - 0.55;
-        double y = (((hash >>> 16) & 0xFFFF) / 65535.0) * 0.80 - 0.40;
+        if (type == QteType.AIM && aimX != null && aimY != null) {
+            return new Point(aimX, aimY);
+        }
+        double x = unit(mix(sessionSeed ^ 0x243F6A8885A308D3L)) * 1.84 - 0.92;
+        double y = unit(mix(sessionSeed ^ 0x13198A2E03707344L)) * 1.84 - 0.92;
         return new Point(x, y);
     }
 
@@ -51,6 +71,16 @@ public final class QtePointerModel {
 
     private static double clamp01(double value) {
         return Math.max(0, Math.min(1, value));
+    }
+
+    private static long mix(long value) {
+        value = (value ^ (value >>> 30)) * 0xBF58476D1CE4E5B9L;
+        value = (value ^ (value >>> 27)) * 0x94D049BB133111EBL;
+        return value ^ (value >>> 31);
+    }
+
+    private static double unit(long value) {
+        return (value >>> 11) * 0x1.0p-53;
     }
 
     public record Point(double x, double y) {}

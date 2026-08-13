@@ -1,0 +1,14 @@
+{
+  "providers": [
+    {
+      "type": "bitmap",
+      "file": "qte_engine:font/minecraft_five.png",
+      "ascent": 11,
+      "height": 14,
+      "chars": [
+        "ABCDEFGHIJKLMNOPQRS",
+        "TUVWXYZ0123456789 _"
+      ]
+    }
+  ]
+}

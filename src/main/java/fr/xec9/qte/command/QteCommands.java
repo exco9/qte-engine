@@ -17,6 +17,7 @@ import java.util.concurrent.CompletableFuture;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -25,6 +26,7 @@ public final class QteCommands {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("qte")
+            .requires(source -> source.hasPermission(2))
             .then(Commands.literal("create")
                 .requires(source -> source.hasPermission(2))
                 .then(Commands.argument("id", StringArgumentType.word())
@@ -89,11 +91,24 @@ public final class QteCommands {
                                                 ))))))))))))
             .then(Commands.literal("play")
                 .then(Commands.argument("id", StringArgumentType.word()).suggests(QteCommands::suggestIds)
-                    .executes(QteCommands::play)))
+                    .executes(QteCommands::playSelf)
+                    .then(Commands.argument(QteCommandSchema.PLAY_TARGETS_ARGUMENT, EntityArgument.players())
+                        .executes(QteCommands::playTargets))))
             .then(Commands.literal("remove")
                 .requires(source -> source.hasPermission(2))
                 .then(Commands.argument("id", StringArgumentType.word()).suggests(QteCommands::suggestIds)
                     .executes(QteCommands::remove)))
+            .then(Commands.literal("settings")
+                .requires(source -> source.hasPermission(2))
+                .then(Commands.argument("id", StringArgumentType.word()).suggests(QteCommands::suggestIds)
+                    .then(Commands.literal("tracking_speed")
+                        .then(Commands.argument("speed", DoubleArgumentType.doubleArg(0.1, 2.0))
+                            .executes(QteCommands::setTrackingSpeed)))
+                    .then(Commands.literal("aim_position")
+                        .then(Commands.argument("x", DoubleArgumentType.doubleArg(-0.92, 0.92))
+                            .then(Commands.argument("y", DoubleArgumentType.doubleArg(-0.92, 0.92))
+                                .executes(QteCommands::setAimPosition))))
+                    .then(Commands.literal("aim_random").executes(QteCommands::setAimRandom))))
             .then(Commands.literal("list").executes(QteCommands::list))
             .then(Commands.literal("types").executes(QteCommands::types))
         );
@@ -159,22 +174,52 @@ public final class QteCommands {
         );
     }
 
-    private static int play(CommandContext<CommandSourceStack> context) {
+    private static int playSelf(CommandContext<CommandSourceStack> context) {
+        try {
+            return play(context, java.util.List.of(context.getSource().getPlayerOrException()), false);
+        } catch (Exception error) {
+            context.getSource().sendFailure(Component.translatable("command.qte.target_required"));
+            return 0;
+        }
+    }
+
+    private static int playTargets(CommandContext<CommandSourceStack> context) {
+        try {
+            return play(
+                context,
+                EntityArgument.getPlayers(context, QteCommandSchema.PLAY_TARGETS_ARGUMENT),
+                true
+            );
+        } catch (Exception error) {
+            context.getSource().sendFailure(Component.translatable("command.qte.no_targets"));
+            return 0;
+        }
+    }
+
+    private static int play(
+        CommandContext<CommandSourceStack> context,
+        java.util.Collection<ServerPlayer> players,
+        boolean explicitTargets
+    ) {
         String id = StringArgumentType.getString(context, "id").toLowerCase(Locale.ROOT);
         QteDefinition definition = data(context).registry().find(id).orElse(null);
         if (definition == null) {
             context.getSource().sendFailure(Component.translatable("command.qte.missing", id));
             return 0;
         }
-        try {
-            ServerPlayer player = context.getSource().getPlayerOrException();
+        for (ServerPlayer player : players) {
             QteSessions.start(player, definition);
-            context.getSource().sendSuccess(() -> Component.translatable("command.qte.started", id), false);
-            return 1;
-        } catch (Exception error) {
-            context.getSource().sendFailure(Component.translatable("command.qte.player_only"));
-            return 0;
         }
+        int count = players.size();
+        if (explicitTargets) {
+            context.getSource().sendSuccess(
+                () -> Component.translatable("command.qte.started_targets", id, count),
+                false
+            );
+        } else {
+            context.getSource().sendSuccess(() -> Component.translatable("command.qte.started", id), false);
+        }
+        return count;
     }
 
     private static int remove(CommandContext<CommandSourceStack> context) {
@@ -185,6 +230,44 @@ public final class QteCommands {
         }
         context.getSource().sendSuccess(() -> Component.translatable("command.qte.removed", id), true);
         return 1;
+    }
+
+    private static int setTrackingSpeed(CommandContext<CommandSourceStack> context) {
+        return updateSettings(context, definition -> definition.withTrackingSpeed(
+            DoubleArgumentType.getDouble(context, "speed")
+        ));
+    }
+
+    private static int setAimPosition(CommandContext<CommandSourceStack> context) {
+        return updateSettings(context, definition -> definition.withAimPosition(
+            DoubleArgumentType.getDouble(context, "x"),
+            DoubleArgumentType.getDouble(context, "y")
+        ));
+    }
+
+    private static int setAimRandom(CommandContext<CommandSourceStack> context) {
+        return updateSettings(context, QteDefinition::withRandomAimPosition);
+    }
+
+    private static int updateSettings(
+        CommandContext<CommandSourceStack> context,
+        java.util.function.UnaryOperator<QteDefinition> update
+    ) {
+        String id = StringArgumentType.getString(context, "id").toLowerCase(Locale.ROOT);
+        QteSavedData savedData = data(context);
+        QteDefinition current = savedData.registry().find(id).orElse(null);
+        if (current == null) {
+            context.getSource().sendFailure(Component.translatable("command.qte.missing", id));
+            return 0;
+        }
+        try {
+            savedData.replace(update.apply(current));
+            context.getSource().sendSuccess(() -> Component.translatable("command.qte.edited", id), true);
+            return 1;
+        } catch (IllegalArgumentException | IllegalStateException error) {
+            context.getSource().sendFailure(Component.literal(error.getMessage()));
+            return 0;
+        }
     }
 
     private static int list(CommandContext<CommandSourceStack> context) {

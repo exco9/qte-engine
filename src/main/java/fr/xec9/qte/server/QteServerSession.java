@@ -17,7 +17,7 @@ final class QteServerSession {
         this.id = id;
         this.definition = definition;
         this.startedAt = startedAt;
-        this.judge = new QteJudge(definition);
+        this.judge = new QteJudge(definition, id.getMostSignificantBits() ^ id.getLeastSignificantBits());
     }
 
     boolean accept(UUID sessionId, QteInput input, long now) {

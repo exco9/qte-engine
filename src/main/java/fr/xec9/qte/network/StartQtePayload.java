@@ -18,7 +18,10 @@ public record StartQtePayload(
     int durationTicks,
     boolean exclusiveInput,
     boolean hideHud,
-    String texture
+    String texture,
+    double trackingSpeed,
+    Double aimX,
+    Double aimY
 ) implements CustomPacketPayload {
     public static final Type<StartQtePayload> TYPE = new Type<>(
         ResourceLocation.fromNamespaceAndPath(QteEngine.MOD_ID, "start")
@@ -35,7 +38,10 @@ public record StartQtePayload(
             buffer.readVarInt(),
             buffer.readBoolean(),
             buffer.readBoolean(),
-            buffer.readBoolean() ? buffer.readUtf(256) : null
+            buffer.readBoolean() ? buffer.readUtf(256) : null,
+            buffer.readDouble(),
+            buffer.readBoolean() ? buffer.readDouble() : null,
+            buffer.readBoolean() ? buffer.readDouble() : null
         );
     }
 
@@ -48,7 +54,10 @@ public record StartQtePayload(
             definition.durationTicks(),
             definition.exclusiveInput(),
             definition.hideHud(),
-            definition.texture()
+            definition.texture(),
+            definition.trackingSpeed(),
+            definition.aimX(),
+            definition.aimY()
         );
     }
 
@@ -63,6 +72,15 @@ public record StartQtePayload(
         buffer.writeBoolean(texture != null);
         if (texture != null) {
             buffer.writeUtf(texture, 256);
+        }
+        buffer.writeDouble(trackingSpeed);
+        buffer.writeBoolean(aimX != null);
+        if (aimX != null) {
+            buffer.writeDouble(aimX);
+        }
+        buffer.writeBoolean(aimY != null);
+        if (aimY != null) {
+            buffer.writeDouble(aimY);
         }
     }
 

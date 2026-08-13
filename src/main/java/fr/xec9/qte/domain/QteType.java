@@ -5,19 +5,14 @@ import java.util.Locale;
 import java.util.stream.Collectors;
 
 public enum QteType {
-    TIMING,
+    OBSERVATION,
+    REACTION_CHOICE,
     HOLD,
     MASH,
     INPUT_SEQUENCE,
-    ANALOG_PRECISION,
+    BALANCE,
     AIM,
-    TRACKING,
-    REACTION_CHOICE,
-    DIALOGUE_TIMING,
-    OBSERVATION,
-    MEMORY,
-    RHYTHM,
-    BALANCE;
+    TRACKING;
 
     public static QteType parse(String value) {
         String normalized = value == null ? "" : value.trim()

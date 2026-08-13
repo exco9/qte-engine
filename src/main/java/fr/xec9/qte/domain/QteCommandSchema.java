@@ -8,6 +8,7 @@ public final class QteCommandSchema {
     public static final String SUCCESS_RESULT_ARGUMENT = "success_result";
     public static final String FAILURE_RESULT_ARGUMENT = "failure_result";
     public static final String HIDE_HUD_ARGUMENT = "hide_hud";
+    public static final String PLAY_TARGETS_ARGUMENT = "targets";
     private static final List<String> COMMON_INPUTS = List.of(
         "a", "d", "down", "e", "left", "left_shift", "mouse.left", "mouse.middle", "mouse.right",
         "right", "s", "space", "up", "w", "z"

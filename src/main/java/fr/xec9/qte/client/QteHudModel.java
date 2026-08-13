@@ -4,30 +4,100 @@ import fr.xec9.qte.domain.QteType;
 import java.util.Locale;
 
 final class QteHudModel {
-    static final int HEIGHT = 84;
-    private static final int MIN_WIDTH = 216;
-    private static final int MAX_WIDTH = 320;
-    private static final int HORIZONTAL_MARGIN = 16;
-    private static final int BOTTOM_MARGIN = 52;
+    static final int PROMPT_SIZE = 68;
+    static final int KEY_SIZE = 32;
+    static final int BALANCE_KEY_SIZE = KEY_SIZE;
+    static final int ACCENT_COLOR = 0xFFF1F4F4;
+    static final int TRACK_COLOR = 0xFF555555;
+    static final int SUCCESS_INDICATOR_COLOR = 0xFF000000;
+    static final int SUCCESS_PROGRESS_INNER_RADIUS = 20;
+    static final int SUCCESS_PROGRESS_OUTER_RADIUS = 22;
+    static final int SEQUENCE_SUCCESS_INNER_RADIUS = 13;
+    static final int SEQUENCE_SUCCESS_OUTER_RADIUS = 14;
+    static final int SEQUENCE_DURATION_INNER_RADIUS = 15;
+    static final int SEQUENCE_DURATION_OUTER_RADIUS = 17;
+    static final int BALANCE_DURATION_INNER_RADIUS = 29;
+    static final int BALANCE_DURATION_OUTER_RADIUS = 31;
+    static final int BALANCE_TRACK_COLOR = 0xFF555555;
+    static final int BALANCE_TARGET_COLOR = 0xFF70E08C;
+    static final int BALANCE_TRACK_INNER_RADIUS = 24;
+    static final int BALANCE_TRACK_OUTER_RADIUS = 26;
+    static final int BALANCE_TARGET_INNER_RADIUS = 23;
+    static final int BALANCE_TARGET_OUTER_RADIUS = 27;
+    static final int RING_OUTER_RADIUS = 27;
+    static final int RING_INNER_RADIUS = 25;
+    private static final int BOTTOM_MARGIN = 48;
+    private static final double ENTRY_DURATION_TICKS = 2.5;
+    private static final int FEEDBACK_DURATION_TICKS = 8;
 
     private QteHudModel() {}
 
     static Layout layout(int guiWidth, int guiHeight) {
-        int width = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, guiWidth - HORIZONTAL_MARGIN * 2));
-        return new Layout((guiWidth - width) / 2, guiHeight - HEIGHT - BOTTOM_MARGIN, width, HEIGHT);
+        int x = Math.max(0, (guiWidth - PROMPT_SIZE) / 2);
+        int y = Math.max(0, guiHeight - PROMPT_SIZE - BOTTOM_MARGIN);
+        return new Layout(x, y, PROMPT_SIZE, PROMPT_SIZE);
     }
 
     static int chatBottom(int guiWidth, int guiHeight) {
         return Math.max(0, layout(guiWidth, guiHeight).y() - 4);
     }
 
+    static double remainingFraction(long elapsedTicks, int durationTicks, float partialTick) {
+        if (durationTicks <= 0) {
+            return 0;
+        }
+        return clampProgress((durationTicks - (elapsedTicks + Math.max(0, partialTick))) / durationTicks);
+    }
+
+    static double entryProgress(long elapsedTicks, float partialTick) {
+        double linear = clampProgress((elapsedTicks + Math.max(0, partialTick)) / ENTRY_DURATION_TICKS);
+        return easeOutCubic(linear);
+    }
+
+    static double easeOutCubic(double progress) {
+        double clamped = clampProgress(progress);
+        double inverse = 1 - clamped;
+        return 1 - inverse * inverse * inverse;
+    }
+
+    static double entryScale(double easedProgress) {
+        return 0.85 + 0.15 * clampProgress(easedProgress);
+    }
+
+    static int alpha(double progress, int baseAlpha) {
+        return (int) Math.round(Math.max(0, Math.min(255, baseAlpha)) * clampProgress(progress));
+    }
+
+    static int countdownAlpha(int alpha) {
+        return (int) Math.round(Math.max(0, Math.min(255, alpha)) * 190.0 / 255.0);
+    }
+
+    static int successIndicatorAlpha(int alpha) {
+        return (int) Math.round(Math.max(0, Math.min(255, alpha)) * 0.35);
+    }
+
+    static double successScale(double feedbackProgress) {
+        return 1 + 0.10 * (1 - easeOutCubic(feedbackProgress));
+    }
+
+    static int feedbackAlpha(int lingerTicks) {
+        return alpha(1 - (double) Math.max(0, lingerTicks) / FEEDBACK_DURATION_TICKS, 255);
+    }
+
+    static int failureShake(int lingerTicks) {
+        if (lingerTicks <= 0 || lingerTicks >= FEEDBACK_DURATION_TICKS) {
+            return 0;
+        }
+        int amplitude = (int) Math.round(2 * (1 - (double) lingerTicks / FEEDBACK_DURATION_TICKS));
+        return (lingerTicks & 2) == 0 ? amplitude : -amplitude;
+    }
+
     static Mechanic mechanic(QteType type) {
         return switch (type) {
-            case TIMING, DIALOGUE_TIMING -> Mechanic.TIMING;
-            case ANALOG_PRECISION, BALANCE -> Mechanic.PRECISION;
+            case BALANCE -> Mechanic.BALANCE;
             case AIM -> Mechanic.AIM;
             case TRACKING -> Mechanic.TRACKING;
-            case INPUT_SEQUENCE, MEMORY, RHYTHM -> Mechanic.SEQUENCE;
+            case INPUT_SEQUENCE, REACTION_CHOICE -> Mechanic.SEQUENCE;
             case HOLD -> Mechanic.HOLD;
             case MASH -> Mechanic.MASH;
             default -> Mechanic.SINGLE;
@@ -48,11 +118,42 @@ final class QteHudModel {
                 default -> "BUTTON " + label;
             };
         }
-        return label;
+        return switch (label) {
+            case "LEFT_SHIFT", "RIGHT_SHIFT" -> "SHIFT";
+            case "LEFT_CONTROL", "RIGHT_CONTROL" -> "CTRL";
+            case "LEFT_ALT", "RIGHT_ALT" -> "ALT";
+            default -> label;
+        };
     }
 
     static double clampProgress(double value) {
         return Math.max(0, Math.min(1, value));
+    }
+
+    static ScreenPoint screenPoint(double normalizedX, double normalizedY, int width, int height, int margin) {
+        int safeMargin = Math.max(0, Math.min(margin, Math.min(width, height) / 2));
+        double x = clampSigned(normalizedX);
+        double y = clampSigned(normalizedY);
+        return new ScreenPoint(
+            safeMargin + (int) Math.round((x + 1) * 0.5 * Math.max(0, width - safeMargin * 2)),
+            safeMargin + (int) Math.round((y + 1) * 0.5 * Math.max(0, height - safeMargin * 2))
+        );
+    }
+
+    static int keyLabelYOffset(boolean pressed) {
+        return pressed ? 2 : 0;
+    }
+
+    static int ringSegments(double fraction) {
+        double clamped = clampProgress(fraction);
+        return clamped <= 0 ? 0 : Math.max(1, (int) Math.ceil(72 * clamped));
+    }
+
+    private static double clampSigned(double value) {
+        if (!Double.isFinite(value)) {
+            return 0;
+        }
+        return Math.max(-1, Math.min(1, value));
     }
 
     static Urgency urgency(double remainingFraction) {
@@ -62,19 +163,9 @@ final class QteHudModel {
         return remainingFraction <= 0.25 ? Urgency.URGENT : Urgency.NORMAL;
     }
 
-    static Band timingSuccessBand(int width) {
-        int center = (int) Math.round(width * 0.70);
-        int naturalLeft = (int) Math.round(width * 0.58);
-        int naturalRight = (int) Math.round(width * 0.82);
-        int bandWidth = Math.min(width, Math.max(8, naturalRight - naturalLeft));
-        int left = Math.max(0, Math.min(width - bandWidth, center - bandWidth / 2));
-        return new Band(left, left + bandWidth);
-    }
-
     enum Mechanic {
         SINGLE,
-        TIMING,
-        PRECISION,
+        BALANCE,
         AIM,
         TRACKING,
         SEQUENCE,
@@ -90,13 +181,6 @@ final class QteHudModel {
 
     record Layout(int x, int y, int width, int height) {}
 
-    record Band(int left, int right) {
-        int width() {
-            return right - left;
-        }
+    record ScreenPoint(int x, int y) {}
 
-        int center() {
-            return left + width() / 2;
-        }
-    }
 }

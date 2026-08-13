@@ -28,15 +28,43 @@ class QtePointerModelTest {
     }
 
     @Test
-    void aimTargetIsDeterministicAndTrackingTargetMovesInsideBounds() {
-        QtePointerModel.Point aimA = QtePointerModel.target(QteType.AIM, "ancient_rune", 0, 100);
-        QtePointerModel.Point aimB = QtePointerModel.target(QteType.AIM, "ancient_rune", 80, 100);
+    void aimUsesWholeSafeRangeAndChangesWithSessionSeed() {
+        QtePointerModel.Point aimA = QtePointerModel.target(QteType.AIM, 11L, 0, 100);
+        QtePointerModel.Point aimB = QtePointerModel.target(QteType.AIM, 11L, 80, 100);
         assertEquals(aimA, aimB);
+        assertNotEquals(aimA, QtePointerModel.target(QteType.AIM, 12L, 0, 100));
+        assertTrue(Math.abs(aimA.x()) <= 0.92);
+        assertTrue(Math.abs(aimA.y()) <= 0.92);
+    }
 
-        QtePointerModel.Point trackingA = QtePointerModel.target(QteType.TRACKING, "hunt", 0, 100);
-        QtePointerModel.Point trackingB = QtePointerModel.target(QteType.TRACKING, "hunt", 25, 100);
+    @Test
+    void trackingPathMovesAndVariesBySessionInsideFullScreenBounds() {
+        QtePointerModel.Point trackingA = QtePointerModel.target(QteType.TRACKING, 21L, 0, 100);
+        QtePointerModel.Point trackingB = QtePointerModel.target(QteType.TRACKING, 21L, 25, 100);
         assertNotEquals(trackingA, trackingB);
-        assertTrue(Math.abs(trackingB.x()) <= 0.65);
-        assertTrue(Math.abs(trackingB.y()) <= 0.45);
+        assertNotEquals(trackingA, QtePointerModel.target(QteType.TRACKING, 22L, 0, 100));
+        for (int tick = 0; tick <= 100; tick++) {
+            QtePointerModel.Point point = QtePointerModel.target(QteType.TRACKING, 21L, tick, 100);
+            assertTrue(Math.abs(point.x()) <= 0.92);
+            assertTrue(Math.abs(point.y()) <= 0.92);
+        }
+    }
+
+    @Test
+    void trackingSpeedScalesMotionAndAimCanUseFixedCoordinates() {
+        QtePointerModel.Point start = QtePointerModel.target(
+            QteType.TRACKING, 31L, 0, 100, 0.2, null, null
+        );
+        QtePointerModel.Point slow = QtePointerModel.target(
+            QteType.TRACKING, 31L, 20, 100, 0.2, null, null
+        );
+        QtePointerModel.Point fast = QtePointerModel.target(
+            QteType.TRACKING, 31L, 20, 100, 1.0, null, null
+        );
+        assertTrue(QtePointerModel.distance(start, slow) < QtePointerModel.distance(start, fast));
+        assertEquals(
+            new QtePointerModel.Point(-0.4, 0.6),
+            QtePointerModel.target(QteType.AIM, 31L, 50, 100, 0.45, -0.4, 0.6)
+        );
     }
 }

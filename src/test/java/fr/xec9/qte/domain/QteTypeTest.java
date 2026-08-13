@@ -1,21 +1,35 @@
 package fr.xec9.qte.domain;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
 
 class QteTypeTest {
     @Test
-    void parsesEveryDocumentedNameAndCommonSeparators() {
+    void exposesOnlySupportedTypesAndParsesCommonAliases() {
+        assertArrayEquals(
+            new QteType[] {
+                QteType.OBSERVATION,
+                QteType.REACTION_CHOICE,
+                QteType.HOLD,
+                QteType.MASH,
+                QteType.INPUT_SEQUENCE,
+                QteType.BALANCE,
+                QteType.AIM,
+                QteType.TRACKING
+            },
+            QteType.values()
+        );
         assertEquals(QteType.OBSERVATION, QteType.parse("reaction"));
         assertEquals(QteType.OBSERVATION, QteType.parse("attention"));
         assertEquals(QteType.INPUT_SEQUENCE, QteType.parse("pattern"));
         assertEquals(QteType.INPUT_SEQUENCE, QteType.parse("direction"));
         assertEquals(QteType.INPUT_SEQUENCE, QteType.parse("input-sequence"));
-        assertEquals(QteType.ANALOG_PRECISION, QteType.parse("analog precision"));
-        assertEquals(QteType.DIALOGUE_TIMING, QteType.parse("DIALOGUE_TIMING"));
-        assertEquals(13, QteType.values().length);
+        assertThrows(IllegalArgumentException.class, () -> QteType.parse("timing"));
+        assertThrows(IllegalArgumentException.class, () -> QteType.parse("memory"));
+        assertThrows(IllegalArgumentException.class, () -> QteType.parse("analog precision"));
     }
 
     @Test

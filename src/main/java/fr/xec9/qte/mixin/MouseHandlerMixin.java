@@ -42,6 +42,8 @@ abstract class MouseHandlerMixin {
     private void qteEngine$blockCameraTurn(double movementTime, CallbackInfo callback) {
         QteClient.onMouseMovement(accumulatedDX, accumulatedDY);
         if (QteClient.blocksGameInput()) {
+            accumulatedDX = 0;
+            accumulatedDY = 0;
             callback.cancel();
         }
     }

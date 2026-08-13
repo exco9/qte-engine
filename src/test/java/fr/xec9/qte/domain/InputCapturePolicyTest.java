@@ -13,4 +13,12 @@ class InputCapturePolicyTest {
         assertFalse(InputCapturePolicy.blocksGameInput(false, true));
         assertFalse(InputCapturePolicy.blocksGameInput(false, false));
     }
+
+    @Test
+    void escapeAndPauseMenuRemainAvailableDuringExclusiveQte() {
+        assertFalse(InputCapturePolicy.blocksKeyPress(true, true, 256));
+        assertTrue(InputCapturePolicy.blocksKeyPress(true, true, 65));
+        assertFalse(InputCapturePolicy.blocksGameInput(true, true, true));
+        assertTrue(InputCapturePolicy.blocksGameInput(true, true, false));
+    }
 }

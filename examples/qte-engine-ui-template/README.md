@@ -13,11 +13,9 @@ The folder can also be distributed as a ZIP. Keep `pack.mcmeta` at the ZIP root.
 
 ## Sprites
 
-- `qte_hud_frame.png`: 16×16 resizable frame. Keep corners and borders inside the outer 4 pixels.
-- `qte_keycap.png`: 12×12 resizable keycap. Keep corners and borders inside the outer 4 pixels.
-- `qte_marker.png`: fixed 5×11 marker.
-
-Keep PNG transparency and crisp pixel edges. The matching `.png.mcmeta` files define nine-slice scaling. Editable files are stored in `sources/*.aseprite`; export each PNG to its matching path under `assets/`.
+- `qte_key.png`: released 32×32 keycap.
+- `qte_key_pressed.png`: pressed 32×32 keycap.
+Keep PNG transparency and crisp pixel edges. Keycap labels are rendered dynamically with Minecraft Five Bold and automatically scaled for labels such as `SPACE`, `SHIFT`, `CTRL`, and mouse buttons. The pressed label follows the lowered face of `qte_key_pressed.png`.
 
 ## Custom QTE image
 
@@ -27,4 +25,4 @@ Place an image at a resource path such as:
 assets/qte_custom/textures/gui/rune.png
 ```
 
-Then use `qte_custom:textures/gui/rune.png` as the command's optional `texture` argument. Custom images are rendered at 40×40, so square textures work best.
+Then use `qte_custom:textures/gui/rune.png` as the command's optional `texture` argument. Custom images are rendered compactly beside the prompt, so square textures work best.

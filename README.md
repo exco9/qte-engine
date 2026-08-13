@@ -9,16 +9,20 @@ A NeoForge 1.21.1 mod for server-authoritative quick-time events with persistent
 /qte create <id> <type> <inputs> <duration> <success_command> <failure_command> [exclusive_input] [hide_hud] [texture]
 /qte edit <id> <type> <inputs> <duration> <success_command> <failure_command> [exclusive_input] [hide_hud] [texture]
 /qte play <id>
+/qte play <id> <targets>
+/qte settings <id> tracking_speed <0.1..2.0>
+/qte settings <id> aim_position <-0.92..0.92> <-0.92..0.92>
+/qte settings <id> aim_random
 /qte remove <id>
 /qte list
 /qte types
 ```
 
-`create`, `edit`, and `remove` require operator permission level 2. `play` must be run by a player. Duration is expressed in seconds and must be between `0.1` and `300`.
+Every `/qte` command requires operator permission level 2. A player can use `/qte play <id>` on themselves. Consoles and command blocks use `/qte play <id> <targets>` with a player name or selector such as `@a`, `@p`, or `@r`. Duration is expressed in seconds and must be between `0.1` and `300`.
 
 Commands containing spaces must be quoted. A leading `/` is optional inside result commands. Both `@s` and `%player%` target the player running the QTE.
 
-- `exclusive_input`: blocks normal keyboard and mouse handling while the QTE is active. Default: `false`.
+- `exclusive_input`: blocks normal gameplay keyboard and mouse handling while the QTE is active. Escape and the pause menu always remain usable so the player can leave safely. Default: `false`.
 - `hide_hud`: temporarily hides the vanilla HUD while keeping the QTE visible. Default: `false`.
 - `texture`: optional resource location for a 40×40 QTE image. Both boolean arguments must be provided before it.
 
@@ -30,28 +34,39 @@ Commands containing spaces must be quoted. A leading `/` is optional inside resu
 /qte create 1 hold space 2.5 "say @s succeed" "say @s failed" true true
 /qte create rune input_sequence "w,a,s,d" 6 "say @s succeed" "say @s failed" true false qte_engine:textures/gui/rune.png
 /qte play 1
+/qte play rune @a
+/qte settings chase tracking_speed 0.35
+/qte settings target aim_position -0.5 0.25
 ```
+
+Tracking defaults to `0.45`; `1.0` matches the former movement rate. Aim coordinates are normalized screen positions: negative X/Y moves left/up, positive X/Y moves right/down. `aim_random` restores a new deterministic position for every play session.
 
 Inputs accept short names such as `space`, `w`, and `left_shift`, or complete Minecraft identifiers such as `key.keyboard.space` and `key.mouse.left`. Mouse aliases include `m1`, `m2`, `m3`, `mouse1`, `mouse2`, and `mouse3`.
 
-Separate multiple inputs with commas. `input_sequence`, `reaction_choice`, `memory`, and `rhythm` require at least two inputs; every other type accepts exactly one. Single-letter inputs follow the player's keyboard layout.
+Separate multiple inputs with commas. `input_sequence` and `reaction_choice` require at least two inputs; every other type accepts exactly one. Single-letter inputs follow the player's keyboard layout.
 
 ## QTE types
 
 - `observation`: press the expected input before time expires.
-- `reaction_choice`: select the first input from the displayed choices. (WIP)
+- `reaction_choice`: react to the displayed choices; the expected choice is the first configured input.
 - `hold`: hold the configured input for 60% of the duration.
 - `mash`: press repeatedly until the target is reached.
 - `input_sequence`: enter every input in order.
-- `balance`: press when the moving marker reaches the center.
-- `aim`: move the cursor into the fixed target, then press the configured input.
-- `tracking`: hold the configured input while following the moving target.
+- `balance`: press while the rotating needle crosses the session-randomized success arc.
+- `aim`: move the circular cursor into a session-randomized target anywhere in the safe screen area, then press.
+- `tracking`: hold the configured input while following a session-randomized moving circle; successful tracking progressively fills it.
 
 Success, failure, and timeout results are validated and executed by the server.
 
 ## UI textures
 
-The HUD sprites can be replaced through a normal Minecraft resource pack. A ready-to-edit template with PNG and Aseprite sources is available in [`examples/qte-engine-ui-template`](examples/qte-engine-ui-template/).
+Every QTE exposes a smooth radial countdown that starts at 12 o'clock and shrinks clockwise with frame interpolation. Simple QTEs use a compact 32×32 keycap; hold and mash add an inner progress ring; balance uses a circular skill-check dial; aim and tracking use circular full-screen targets.
+
+The keycap sprites can be replaced through a normal Minecraft resource pack:
+
+- `qte_key.png`: released keycap.
+- `qte_key_pressed.png`: pressed keycap.
+A ready-to-edit template is available in [`examples/qte-engine-ui-template`](examples/qte-engine-ui-template/). Key labels use a padded bitmap atlas generated from the bundled Minecraft Five Bold TTF under the SIL Open Font License, avoiding clipped glyphs and runtime FreeType failures. Aim and tracking update their visual pointer on every mouse frame while bounded samples remain server-validated. Entry and result animations use local cubic easing, so EaseGUI and GUI Tween are not required.
 
 Custom QTE images use full resource locations such as `my_pack:textures/gui/rune.png`.
 
@@ -63,4 +78,4 @@ Java 21 is required.
 .\gradlew.bat clean test build
 ```
 
-The built JAR is written to `build/libs/qte_engine-0.3.0.jar`.
+The built JAR is written to `build/libs/qte_engine-0.4.14.jar`.

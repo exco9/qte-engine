@@ -43,6 +43,28 @@ class QteDefinitionTest {
     }
 
     @Test
+    void pointerSettingsHaveSafeDefaultsAndValidatedOverrides() {
+        QteDefinition tracking = QteDefinition.create(
+            "follow", QteType.TRACKING, "mouse1", 3, "say won", null
+        );
+        assertEquals(0.45, tracking.trackingSpeed(), 0.0001);
+        assertNull(tracking.aimX());
+        assertNull(tracking.aimY());
+        assertEquals(0.2, tracking.withTrackingSpeed(0.2).trackingSpeed(), 0.0001);
+        assertThrows(IllegalArgumentException.class, () -> tracking.withTrackingSpeed(0.09));
+        assertThrows(IllegalStateException.class, () -> tracking.withAimPosition(0, 0));
+
+        QteDefinition aim = QteDefinition.create(
+            "target", QteType.AIM, "mouse1", 3, "say won", null
+        ).withAimPosition(-0.5, 0.75);
+        assertEquals(-0.5, aim.aimX(), 0.0001);
+        assertEquals(0.75, aim.aimY(), 0.0001);
+        assertNull(aim.withRandomAimPosition().aimX());
+        assertThrows(IllegalArgumentException.class, () -> aim.withAimPosition(0.93, 0));
+        assertThrows(IllegalStateException.class, () -> aim.withTrackingSpeed(0.5));
+    }
+
+    @Test
     void storesSeparateNormalizedFailureResultAndHideHudOption() {
         QteDefinition definition = QteDefinition.create(
             "cinematic",

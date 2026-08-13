@@ -12,7 +12,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.saveddata.SavedData;
 
 public final class QteSavedData extends SavedData {
-    private static final int FORMAT_VERSION = 4;
+    private static final int FORMAT_VERSION = 5;
     private static final String FILE_NAME = "qte_engine_definitions";
     private static final Factory<QteSavedData> FACTORY = new Factory<>(QteSavedData::new, QteSavedData::load);
 
@@ -66,6 +66,11 @@ public final class QteSavedData extends SavedData {
             }
             entry.putBoolean("exclusiveInput", definition.exclusiveInput());
             entry.putBoolean("hideHud", definition.hideHud());
+            entry.putDouble("trackingSpeed", definition.trackingSpeed());
+            if (definition.aimX() != null) {
+                entry.putDouble("aimX", definition.aimX());
+                entry.putDouble("aimY", definition.aimY());
+            }
             if (definition.texture() != null) {
                 entry.putString("texture", definition.texture());
             }
@@ -100,7 +105,12 @@ public final class QteSavedData extends SavedData {
                     failureCommand,
                     entry.getBoolean("exclusiveInput"),
                     entry.getBoolean("hideHud"),
-                    texture
+                    texture,
+                    entry.contains("trackingSpeed", Tag.TAG_DOUBLE)
+                        ? entry.getDouble("trackingSpeed")
+                        : QteDefinition.DEFAULT_TRACKING_SPEED,
+                    entry.contains("aimX", Tag.TAG_DOUBLE) ? entry.getDouble("aimX") : null,
+                    entry.contains("aimY", Tag.TAG_DOUBLE) ? entry.getDouble("aimY") : null
                 ));
             } catch (IllegalArgumentException ignored) {
                 // A malformed entry is skipped so one broken definition cannot make a world unloadable.
