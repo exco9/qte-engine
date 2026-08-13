@@ -15,7 +15,11 @@ The folder can also be distributed as a ZIP. Keep `pack.mcmeta` at the ZIP root.
 
 - `qte_key.png`: released 32×32 keycap.
 - `qte_key_pressed.png`: pressed 32×32 keycap.
-Keep PNG transparency and crisp pixel edges. Keycap labels are rendered dynamically with Minecraft Five Bold and automatically scaled for labels such as `SPACE`, `SHIFT`, `CTRL`, and mouse buttons. The pressed label follows the lowered face of `qte_key_pressed.png`.
+- `qte_mouse_left.png`: M1 prompt.
+- `qte_mouse_right.png`: M2 prompt.
+- `qte_mouse_mb3.png`: M3 prompt.
+- `qte_mouse_base.png`: neutral mouse template.
+Keep PNG transparency and crisp pixel edges. Keyboard labels are rendered dynamically with Minecraft Five Bold and automatically scaled for labels such as `SPACE`, `SHIFT`, and `CTRL`. Mouse buttons 4 and above keep a text keycap because no dedicated icon identifies them.
 
 ## Custom QTE image
 

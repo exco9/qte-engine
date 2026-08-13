@@ -109,6 +109,25 @@ class QteHudModelTest {
     }
 
     @Test
+    void mapsPrimaryMouseButtonsToDedicatedSprites() {
+        assertEquals("qte_mouse_left", QteHudModel.mousePromptSprite("M1"));
+        assertEquals("qte_mouse_right", QteHudModel.mousePromptSprite("M2"));
+        assertEquals("qte_mouse_mb3", QteHudModel.mousePromptSprite("M3"));
+        assertEquals(null, QteHudModel.mousePromptSprite("BUTTON 4"));
+        assertEquals(null, QteHudModel.mousePromptSprite("A"));
+    }
+
+    @Test
+    void mousePromptSlowlyCrossfadesWithTheBaseTexture() {
+        assertEquals(0, QteHudModel.mouseBlinkAlpha(0, false));
+        assertEquals(128, QteHudModel.mouseBlinkAlpha(500, false));
+        assertEquals(255, QteHudModel.mouseBlinkAlpha(1_000, false));
+        assertEquals(128, QteHudModel.mouseBlinkAlpha(1_500, false));
+        assertEquals(0, QteHudModel.mouseBlinkAlpha(2_000, false));
+        assertEquals(255, QteHudModel.mouseBlinkAlpha(0, true));
+    }
+
+    @Test
     void ringSegmentCountTracksVisibleFraction() {
         assertEquals(72, QteHudModel.ringSegments(1));
         assertEquals(36, QteHudModel.ringSegments(0.5));

@@ -8,6 +8,7 @@ import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import fr.xec9.qte.QteEngine;
 import fr.xec9.qte.domain.QteStatus;
+import net.minecraft.Util;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
@@ -18,6 +19,7 @@ import org.joml.Matrix4f;
 final class QteKeyPromptRenderer {
     private static final ResourceLocation KEY = sprite("qte_key");
     private static final ResourceLocation KEY_PRESSED = sprite("qte_key_pressed");
+    private static final ResourceLocation MOUSE_BASE = sprite("qte_mouse_base");
     private static final ResourceLocation KEY_FONT = ResourceLocation.fromNamespaceAndPath(
         QteEngine.MOD_ID, "qte_key_compact"
     );
@@ -114,6 +116,18 @@ final class QteKeyPromptRenderer {
     ) {
         int x = centerX - size / 2;
         int y = centerY - size / 2;
+        String mouseSprite = QteHudModel.mousePromptSprite(label);
+        if (mouseSprite != null) {
+            RenderSystem.setShaderColor(1, 1, 1, alpha / 255.0F);
+            graphics.blitSprite(MOUSE_BASE, x, y, size, size);
+            int blinkAlpha = QteHudModel.mouseBlinkAlpha(Util.getMillis(), pressed);
+            int highlightAlpha = (alpha * blinkAlpha + 127) / 255;
+            RenderSystem.setShaderColor(1, 1, 1, highlightAlpha / 255.0F);
+            graphics.blitSprite(sprite(mouseSprite), x, y, size, size);
+            RenderSystem.setShaderColor(1, 1, 1, 1);
+            return;
+        }
+
         RenderSystem.setShaderColor(1, 1, 1, alpha / 255.0F);
         graphics.blitSprite(pressed ? KEY_PRESSED : KEY, x, y, size, size);
         RenderSystem.setShaderColor(1, 1, 1, 1);

@@ -66,6 +66,9 @@ The keycap sprites can be replaced through a normal Minecraft resource pack:
 
 - `qte_key.png`: released keycap.
 - `qte_key_pressed.png`: pressed keycap.
+- `qte_mouse_left.png`, `qte_mouse_right.png`, and `qte_mouse_mb3.png`: dedicated M1, M2, and M3 prompts.
+- `qte_mouse_base.png`: neutral 32×32 mouse template.
+A mouse prompt slowly crossfades between its neutral and highlighted textures; pressing the requested button makes its highlight fully visible.
 A ready-to-edit template is available in [`examples/qte-engine-ui-template`](examples/qte-engine-ui-template/). Key labels use a padded bitmap atlas generated from the bundled Minecraft Five Bold TTF under the SIL Open Font License, avoiding clipped glyphs and runtime FreeType failures. Aim and tracking update their visual pointer on every mouse frame while bounded samples remain server-validated. Entry and result animations use local cubic easing, so EaseGUI and GUI Tween are not required.
 
 Custom QTE images use full resource locations such as `my_pack:textures/gui/rune.png`.
@@ -78,4 +81,4 @@ Java 21 is required.
 .\gradlew.bat clean test build
 ```
 
-The built JAR is written to `build/libs/qte_engine-0.4.14.jar`.
+The built JAR is written to `build/libs/qte_engine-0.4.16.jar`.

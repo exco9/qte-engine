@@ -144,6 +144,24 @@ final class QteHudModel {
         return pressed ? 2 : 0;
     }
 
+    static String mousePromptSprite(String label) {
+        return switch (label) {
+            case "M1" -> "qte_mouse_left";
+            case "M2" -> "qte_mouse_right";
+            case "M3" -> "qte_mouse_mb3";
+            default -> null;
+        };
+    }
+
+    static int mouseBlinkAlpha(long elapsedMillis, boolean pressed) {
+        if (pressed) {
+            return 255;
+        }
+        long phaseMillis = Math.floorMod(elapsedMillis, 2_000L);
+        double phase = phaseMillis / 2_000.0;
+        return (int) Math.round((1 - Math.cos(phase * Math.PI * 2)) * 127.5 + 1.0E-9);
+    }
+
     static int ringSegments(double fraction) {
         double clamped = clampProgress(fraction);
         return clamped <= 0 ? 0 : Math.max(1, (int) Math.ceil(72 * clamped));
