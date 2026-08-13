@@ -12,7 +12,7 @@ class QteCommandSchemaTest {
     void qteRootRequiresOperatorPermissionSoEverySubcommandIsProtected() throws Exception {
         String commands = Files.readString(Path.of(
             "src/main/java/fr/xec9/qte/command/QteCommands.java"
-        ));
+        )).replace("\r\n", "\n");
         org.junit.jupiter.api.Assertions.assertTrue(
             commands.contains("Commands.literal(\"qte\")\n            .requires(source -> source.hasPermission(2))"),
             "the permission check must be on the /qte root, not only selected children"
