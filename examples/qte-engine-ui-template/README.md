@@ -19,7 +19,7 @@ The folder can also be distributed as a ZIP. Keep `pack.mcmeta` at the ZIP root.
 - `qte_mouse_right.png`: M2 prompt.
 - `qte_mouse_mb3.png`: M3 prompt.
 - `qte_mouse_base.png`: neutral mouse template.
-Keep PNG transparency and crisp pixel edges. Keyboard labels are rendered dynamically with Minecraft Five Bold and automatically scaled for labels such as `SPACE`, `SHIFT`, and `CTRL`. Mouse buttons 4 and above keep a text keycap because no dedicated icon identifies them.
+Keep PNG transparency and crisp pixel edges. Keyboard labels use `assets/qte_engine/textures/font/ascii.png`, a 128×128 atlas split into 16×16 cells of 8×8 pixels. Its row mapping is declared by `assets/qte_engine/font/qte_key_compact.json`, so both files can be replaced together for another character set. Labels such as `SPACE`, `SHIFT`, and `CTRL` are automatically scaled. Mouse buttons 4 and above keep a text keycap because no dedicated icon identifies them.
 
 ## Custom QTE image
 

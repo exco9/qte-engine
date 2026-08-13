@@ -140,8 +140,18 @@ final class QteHudModel {
         );
     }
 
+    static int keyLabelXOffset() {
+        return 1;
+    }
+
     static int keyLabelYOffset(boolean pressed) {
-        return pressed ? 2 : 0;
+        return pressed ? 0 : -2;
+    }
+
+    static float keyLabelScale(int textWidth, int keySize) {
+        int maxTextWidth = Math.max(8, keySize - 9);
+        float scaleLimit = keySize < KEY_SIZE ? 1.20F : 1.35F;
+        return Math.min(scaleLimit, (float) maxTextWidth / Math.max(1, textWidth));
     }
 
     static String mousePromptSprite(String label) {

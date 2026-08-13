@@ -103,9 +103,19 @@ class QteHudModelTest {
     }
 
     @Test
-    void pressedKeyLabelFollowsLoweredKeyFace() {
-        assertEquals(0, QteHudModel.keyLabelYOffset(false));
-        assertEquals(2, QteHudModel.keyLabelYOffset(true));
+    void keyLabelIsCenteredAndShiftedUpWhileFollowingThePressedFace() {
+        assertEquals(1, QteHudModel.keyLabelXOffset());
+        assertEquals(-2, QteHudModel.keyLabelYOffset(false));
+        assertEquals(0, QteHudModel.keyLabelYOffset(true));
+    }
+
+    @Test
+    void keyLabelUsesThirtyFivePercentExceptOnCompactSequenceKeys() {
+        assertEquals(1.35F, QteHudModel.keyLabelScale(8, 32), 0.0001F);
+        assertEquals(23.0F / 24.0F, QteHudModel.keyLabelScale(24, 32), 0.0001F);
+        assertEquals(1.35F, QteHudModel.keyLabelScale(0, 32), 0.0001F);
+        assertEquals(1.20F, QteHudModel.keyLabelScale(8, 24), 0.0001F);
+        assertEquals(15.0F / 16.0F, QteHudModel.keyLabelScale(16, 24), 0.0001F);
     }
 
     @Test

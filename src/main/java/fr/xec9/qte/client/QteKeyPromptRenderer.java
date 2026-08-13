@@ -133,10 +133,13 @@ final class QteKeyPromptRenderer {
         RenderSystem.setShaderColor(1, 1, 1, 1);
 
         Component text = Component.literal(label).withStyle(style -> style.withFont(labelFont));
-        int maxTextWidth = Math.max(8, size - 9);
-        float textScale = Math.min(1, (float) maxTextWidth / Math.max(1, font.width(text)));
+        float textScale = QteHudModel.keyLabelScale(font.width(text), size);
         graphics.pose().pushPose();
-        graphics.pose().translate(centerX, centerY + 1 + QteHudModel.keyLabelYOffset(pressed), 0);
+        graphics.pose().translate(
+            centerX + QteHudModel.keyLabelXOffset(),
+            centerY + 1 + QteHudModel.keyLabelYOffset(pressed),
+            0
+        );
         graphics.pose().scale(textScale, textScale, 1);
         graphics.drawString(
             font,

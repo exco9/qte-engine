@@ -2,12 +2,26 @@
   "providers": [
     {
       "type": "bitmap",
-      "file": "qte_engine:font/minecraft_five_compact.png",
-      "ascent": 11,
-      "height": 14,
+      "file": "qte_engine:font/ascii.png",
+      "ascent": 7,
+      "height": 8,
       "chars": [
-        "ABCDEFGHIJKLMNOPQRS",
-        "TUVWXYZ0123456789 _"
+        "ÀÁÂÈÊËÍÓÔÕÚßãõğİ",
+        "ıŒœŞşŴŵžȇ\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+        " !\"#$%&'()*+,-./",
+        "0123456789:;<=>?",
+        "@ABCDEFGHIJKLMNO",
+        "PQRSTUVWXYZ[\\]^_",
+        "`abcdefghijklmno",
+        "pqrstuvwxyz{|}~⌂",
+        "ÇüéâäàåçêëèïîìÄÅ",
+        "ÉæÆôöòûùÿÖÜø£Ø×ƒ",
+        "áíóúñÑªº¿®¬½¼¡«»",
+        "░▒▓│┤╡╢╖╕╣║╗╝╜╛┐",
+        "└┴┬├─┼╞╟╚╔╩╦╠═╬╧",
+        "╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀",
+        "αßΓπΣσµτΦΘΩδ∞φε∩",
+        "≡±≥≤⌠⌡÷≈°∙·√ⁿ²■\u00a0"
       ]
     }
   ]
