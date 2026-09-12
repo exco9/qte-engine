@@ -1,0 +1,4 @@
+jdk:
+  - openjdk21
+install:
+  - bash gradlew --no-daemon clean build publishToMavenLocal
