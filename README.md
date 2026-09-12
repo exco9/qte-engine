@@ -26,6 +26,35 @@ Commands containing spaces must be quoted. A leading `/` is optional inside resu
 - `hide_hud`: temporarily hides the vanilla HUD while keeping the QTE visible. Default: `false`.
 - `texture`: optional resource location for a 40×40 QTE image. Both boolean arguments must be provided before it.
 
+## Java integration API
+
+QTE Engine 0.5.0 exposes a small server-side API for other mods. Integrations can start a saved QTE without executing Minecraft commands, observe its authoritative result on the NeoForge event bus, inspect the active session, or cancel it.
+
+```java
+UUID sessionId = QteApi.play(player, "door_pull", QteRunOptions.INTEGRATION);
+```
+
+`QteRunOptions.DEFAULT` preserves the normal `/qte play` behavior and executes the definition's configured result command. `QteRunOptions.INTEGRATION` suppresses those commands so the calling mod owns the outcome.
+
+Listen for completion with `QteCompletedEvent`. Its `QteResult` exposes the session ID, player ID, QTE definition ID, and one of:
+
+- `SUCCESS`
+- `FAILURE`
+- `TIMEOUT`
+- `CANCELLED`
+- `REPLACED`
+
+Starting another QTE for the same player replaces the previous server session and emits `REPLACED`. Calling `QteApi.cancel(player)` emits `CANCELLED` and immediately clears the client QTE HUD/input capture.
+
+Other helpers:
+
+```java
+QteApi.getDefinition(server, "door_pull");
+QteApi.activeSession(player);
+QteApi.isActive(player);
+QteApi.cancel(player);
+```
+
 ## Examples
 
 <img width="406" height="116" alt="uiqteengine" src="https://github.com/user-attachments/assets/ba59518f-9a29-4ffa-be6a-3b5b1cfc0980" />
@@ -81,4 +110,4 @@ Java 21 is required.
 .\gradlew.bat clean test build
 ```
 
-The built JAR is written to `build/libs/qte_engine-0.4.22.jar`.
+The built JAR is written to `build/libs/qte_engine-0.5.0.jar`.
