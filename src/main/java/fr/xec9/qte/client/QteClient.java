@@ -70,6 +70,20 @@ public final class QteClient {
         }
     }
 
+    /** Clears a server-completed run that the local judge still considers active. */
+    public static void handleTerminal(java.util.UUID sessionId) {
+        if (active != null && fr.xec9.qte.domain.QteTerminalPolicy.shouldClear(
+                active.payload().sessionId(), sessionId, active.judge().status().terminal(), true)) {
+            KeyMapping.releaseAll();
+            clearActive();
+        }
+    }
+
+    /** Whether this client is awaiting QTE input. */
+    public static boolean isActive() {
+        return active != null && !active.judge().status().terminal();
+    }
+
     public static boolean blocksGameInput() {
         return fr.xec9.qte.domain.InputCapturePolicy.blocksGameInput(
             active != null && !active.judge().status().terminal(),
@@ -135,14 +149,14 @@ public final class QteClient {
     }
 
     @SubscribeEvent
-    public static void renderHudAboveFocusedChat(ScreenEvent.Render.Post event) {
-        if (active != null && event.getScreen() instanceof ChatScreen) {
+    public static void renderHudAboveScreen(ScreenEvent.Render.Post event) {
+        if (active != null && !(event.getScreen() instanceof PauseScreen)) {
             QteHud.render(event.getGuiGraphics(), active, event.getPartialTick());
         }
     }
 
     private static void renderHudLayer(GuiGraphics graphics, DeltaTracker deltaTracker) {
-        if (active != null && !(Minecraft.getInstance().screen instanceof ChatScreen)) {
+        if (active != null && (Minecraft.getInstance().screen == null || Minecraft.getInstance().screen instanceof PauseScreen)) {
             QteHud.render(graphics, active, deltaTracker.getGameTimeDeltaPartialTick(false));
         }
     }
