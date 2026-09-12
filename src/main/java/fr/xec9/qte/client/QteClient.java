@@ -10,6 +10,7 @@ import fr.xec9.qte.domain.QtePointerModel;
 import fr.xec9.qte.domain.QteStatus;
 import fr.xec9.qte.domain.QteType;
 import fr.xec9.qte.QteEngine;
+import fr.xec9.qte.network.CancelQtePayload;
 import fr.xec9.qte.network.FinishQtePayload;
 import fr.xec9.qte.network.QteInputPayload;
 import fr.xec9.qte.network.StartQtePayload;
@@ -59,6 +60,13 @@ public final class QteClient {
         active = new ClientSession(payload, definition);
         if (blocksGameInput()) {
             KeyMapping.releaseAll();
+        }
+    }
+
+    public static void handleCancel(CancelQtePayload payload) {
+        if (active != null && active.payload().sessionId().equals(payload.sessionId())) {
+            KeyMapping.releaseAll();
+            clearActive();
         }
     }
 

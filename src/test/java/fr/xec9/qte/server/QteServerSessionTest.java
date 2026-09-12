@@ -1,9 +1,10 @@
 package fr.xec9.qte.server;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import fr.xec9.qte.api.QteRunOptions;
 import fr.xec9.qte.domain.QteDefinition;
 import fr.xec9.qte.domain.QteInput;
 import fr.xec9.qte.domain.QteStatus;
@@ -16,7 +17,7 @@ class QteServerSessionTest {
     @Test
     void clientCannotClaimSuccessBeforeServerJudgeSucceeds() {
         UUID id = UUID.randomUUID();
-        QteServerSession session = new QteServerSession(id, definition(), 100);
+        QteServerSession session = session(id);
 
         assertEquals(Optional.empty(), session.finish(id, 101));
         assertEquals(Optional.empty(), session.finish(UUID.randomUUID(), 101));
@@ -27,7 +28,7 @@ class QteServerSessionTest {
     @Test
     void matchingServerValidatedInputMakesRewardEligible() {
         UUID id = UUID.randomUUID();
-        QteServerSession session = new QteServerSession(id, definition(), 100);
+        QteServerSession session = session(id);
 
         assertTrue(session.accept(id, QteInput.press("key.keyboard.space"), 101));
         assertEquals(Optional.of(QteStatus.SUCCESS), session.finish(id, 101));
@@ -36,19 +37,19 @@ class QteServerSessionTest {
     @Test
     void reportsAuthoritativeFailureAndTimeoutOutcomes() {
         UUID failedId = UUID.randomUUID();
-        QteServerSession failed = new QteServerSession(failedId, definition(), 100);
+        QteServerSession failed = session(failedId);
         failed.accept(failedId, QteInput.press("key.keyboard.x"), 101);
         assertEquals(Optional.of(QteStatus.FAILURE), failed.finish(failedId, 101));
 
         UUID timeoutId = UUID.randomUUID();
-        QteServerSession timedOut = new QteServerSession(timeoutId, definition(), 100);
+        QteServerSession timedOut = session(timeoutId);
         assertEquals(Optional.of(QteStatus.TIMEOUT), timedOut.finish(timeoutId, 141));
     }
 
     @Test
     void serverCanPollTerminalOutcomeWithoutClientFinishPacket() {
         UUID id = UUID.randomUUID();
-        QteServerSession session = new QteServerSession(id, definition(), 100);
+        QteServerSession session = session(id);
 
         assertEquals(Optional.empty(), session.outcome(101));
         assertEquals(Optional.of(QteStatus.TIMEOUT), session.outcome(141));
@@ -57,11 +58,23 @@ class QteServerSessionTest {
     @Test
     void lateOrMalformedPointerInputIsRejected() {
         UUID id = UUID.randomUUID();
-        QteServerSession session = new QteServerSession(id, definition(), 100);
+        QteServerSession session = session(id);
 
         assertFalse(session.accept(id, QteInput.pointer(Double.NaN, 0), 101));
         assertFalse(session.accept(id, QteInput.press("x".repeat(65)), 101));
         assertFalse(session.accept(id, QteInput.press("key.keyboard.space"), 200));
+    }
+
+    @Test
+    void storesIntegrationOptionsWithTheSession() {
+        UUID id = UUID.randomUUID();
+        QteServerSession session = new QteServerSession(id, definition(), QteRunOptions.INTEGRATION, 100);
+
+        assertFalse(session.options().executeConfiguredCommands());
+    }
+
+    private static QteServerSession session(UUID id) {
+        return new QteServerSession(id, definition(), QteRunOptions.DEFAULT, 100);
     }
 
     private static QteDefinition definition() {

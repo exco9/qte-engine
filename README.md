@@ -73,3 +73,8 @@ Java 21 is required.
 ```
 
 The built JAR is written to `build/libs/qte_engine-0.4.22.jar`.
+
+## NarrativeCraft integration
+
+This branch includes the public Java API and session-scoped callbacks. Use QteApi.play(player, id, QteRunOptions.INTEGRATION, callback) and QteApi.cancel(player, sessionId). Install this build on both sides (network protocol 6).
+

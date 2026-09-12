@@ -1,5 +1,6 @@
 package fr.xec9.qte.server;
 
+import fr.xec9.qte.api.QteRunOptions;
 import fr.xec9.qte.domain.QteDefinition;
 import fr.xec9.qte.domain.QteInput;
 import fr.xec9.qte.domain.QteJudge;
@@ -10,12 +11,14 @@ import java.util.UUID;
 final class QteServerSession {
     private final UUID id;
     private final QteDefinition definition;
+    private final QteRunOptions options;
     private final long startedAt;
     private final QteJudge judge;
 
-    QteServerSession(UUID id, QteDefinition definition, long startedAt) {
+    QteServerSession(UUID id, QteDefinition definition, QteRunOptions options, long startedAt) {
         this.id = id;
         this.definition = definition;
+        this.options = options;
         this.startedAt = startedAt;
         this.judge = new QteJudge(definition, id.getMostSignificantBits() ^ id.getLeastSignificantBits());
     }
@@ -54,6 +57,10 @@ final class QteServerSession {
 
     QteDefinition definition() {
         return definition;
+    }
+
+    QteRunOptions options() {
+        return options;
     }
 
     private long elapsed(long now) {
