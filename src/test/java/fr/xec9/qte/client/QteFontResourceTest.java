@@ -1,5 +1,6 @@
 package fr.xec9.qte.client;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Files;
@@ -16,14 +17,13 @@ class QteFontResourceTest {
     }
 
     @Test
-    void bothQteFontDefinitionsUseTheSameAsciiBitmap() throws Exception {
-        for (String name : new String[] {"qte_key.json", "qte_key_compact.json"}) {
-            String definition = Files.readString(Path.of(
-                "src/main/resources/assets/qte_engine/font", name
-            ));
-            assertTrue(definition.contains("\"type\": \"bitmap\""));
-            assertTrue(definition.contains("\"file\": \"qte_engine:font/ascii.png\""));
-            assertTrue(!definition.contains("\"type\": \"ttf\""));
-        }
+    void qteFontDelegatesToMinecraftDefaultFont() throws Exception {
+        String definition = Files.readString(Path.of(
+            "src/main/resources/assets/qte_engine/font/qte_key_compact.json"
+        ));
+        assertTrue(definition.contains("\"type\": \"reference\""));
+        assertTrue(definition.contains("\"id\": \"minecraft:default\""));
+        assertFalse(definition.contains("\"type\": \"bitmap\""));
+        assertFalse(definition.contains("\"type\": \"ttf\""));
     }
 }
