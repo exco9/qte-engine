@@ -29,6 +29,7 @@ final class QteHudModel {
     private static final int BOTTOM_MARGIN = 48;
     private static final double ENTRY_DURATION_TICKS = 2.5;
     private static final int FEEDBACK_DURATION_TICKS = 8;
+    private static final String SMALL_CAPS = "ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘꞯʀꜱᴛᴜᴠᴡxʏᴢ";
 
     private QteHudModel() {}
 
@@ -115,15 +116,28 @@ final class QteHudModel {
                 case "LEFT" -> "M1";
                 case "RIGHT" -> "M2";
                 case "MIDDLE" -> "M3";
-                default -> "BUTTON " + label;
+                default -> smallCaps("BUTTON " + label);
             };
         }
-        return switch (label) {
+        String normalized = switch (label) {
             case "LEFT_SHIFT", "RIGHT_SHIFT" -> "SHIFT";
             case "LEFT_CONTROL", "RIGHT_CONTROL" -> "CTRL";
             case "LEFT_ALT", "RIGHT_ALT" -> "ALT";
             default -> label;
         };
+        return smallCaps(normalized);
+    }
+
+    static String smallCaps(String value) {
+        StringBuilder result = new StringBuilder(value.length());
+        value.codePoints().forEach(codePoint -> {
+            if (codePoint >= 'A' && codePoint <= 'Z') {
+                result.appendCodePoint(SMALL_CAPS.codePointAt(codePoint - 'A'));
+            } else {
+                result.appendCodePoint(codePoint);
+            }
+        });
+        return result.toString();
     }
 
     static double clampProgress(double value) {
@@ -210,5 +224,4 @@ final class QteHudModel {
     record Layout(int x, int y, int width, int height) {}
 
     record ScreenPoint(int x, int y) {}
-
 }
