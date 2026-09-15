@@ -60,7 +60,9 @@ The keycap sprites can be replaced through a normal Minecraft resource pack:
 *   `qte_key.png`: released keycap.
 *   `qte_key_pressed.png`: pressed keycap.
 *   `qte_mouse_left.png`, `qte_mouse_right.png`, and `qte_mouse_mb3.png`: dedicated M1, M2, and M3 prompts.
-*   `qte_mouse_base.png`: neutral 32×32 mouse template. A mouse prompt slowly crossfades between its neutral and highlighted textures; pressing the requested button makes its highlight fully visible. A ready-to-edit template is available in [`examples/qte-engine-ui-template`](examples/qte-engine-ui-template/). Key labels use the replaceable `qte_engine:textures/font/ascii.png` bitmap atlas: 128×128 pixels, arranged as 16×16 cells of 8×8 pixels. A resource pack can replace both `assets/qte_engine/textures/font/ascii.png` and `assets/qte_engine/font/qte_key_compact.json` to support another character set. Long key names are still scaled to remain inside the keycap. Aim and tracking update their visual pointer on every mouse frame while bounded samples remain server-validated.
+*   `qte_mouse_base.png`: neutral 32×32 mouse template. A mouse prompt slowly crossfades between its neutral and highlighted textures; pressing the requested button makes its highlight fully visible.
+
+A ready-to-edit template is available in [`examples/qte-engine-ui-template`](examples/qte-engine-ui-template/). Keyboard labels are converted to Unicode small capitals such as `ᴡ`, `ꜱᴘᴀᴄᴇ`, `ꜱʜɪꜰᴛ`, and `ᴄᴛʀʟ`. The `qte_engine:qte_key_compact` font delegates to Minecraft's built-in `minecraft:default` font, including its native Unifont fallback, so QTE Engine no longer bundles a separate font or bitmap glyph atlas. Resource packs can still override `assets/qte_engine/font/qte_key_compact.json` if they want a different label font. Long key names are scaled to remain inside the keycap. Aim and tracking update their visual pointer on every mouse frame while bounded samples remain server-validated.
 
 Custom QTE images use full resource locations such as `my_pack:textures/gui/rune.png`.
 
