@@ -27,5 +27,10 @@
   "qte.type.input_sequence": "Input sequence",
   "qte.type.balance": "Balance",
   "qte.type.aim": "Aim",
-  "qte.type.tracking": "Tracking"
+  "qte.type.tracking": "Tracking",
+  "qte_engine.configuration.title": "QTE Engine Configuration",
+  "qte_engine.configuration.key_font": "Key label font",
+  "qte_engine.configuration.key_font.tooltip": "Choose between native Unicode small capitals and the bundled compact Minecraft Five bitmap.",
+  "qte_engine.configuration.key_font.small_caps": "Small caps",
+  "qte_engine.configuration.key_font.minecraft_five": "Minecraft Five"
 }

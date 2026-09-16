@@ -20,9 +20,9 @@ The folder can also be distributed as a ZIP. Keep `pack.mcmeta` at the ZIP root.
 - `qte_mouse_mb3.png`: M3 prompt.
 - `qte_mouse_base.png`: neutral mouse template.
 
-Keep PNG transparency and crisp pixel edges. Keyboard labels are rendered by QTE Engine as Unicode small capitals through Minecraft's built-in font fallback, so this template does not need to bundle a font atlas. Labels such as `ꜱᴘᴀᴄᴇ`, `ꜱʜɪꜰᴛ`, and `ᴄᴛʀʟ` are automatically scaled to fit their keycaps. Mouse buttons 4 and above keep a text keycap because no dedicated icon identifies them.
+Keep PNG transparency and crisp pixel edges. Keyboard label font is selected in QTE Engine's client config. `SMALL_CAPS` uses Unicode small capitals through Minecraft's built-in font fallback, while `MINECRAFT_FIVE` uses QTE Engine's compact optional bitmap atlas. Long labels are automatically scaled to fit their keycaps. Mouse buttons 4 and above keep a text keycap because no dedicated icon identifies them.
 
-Advanced resource packs can override `assets/qte_engine/font/qte_key_compact.json` if they want a different font while keeping the same renderer.
+Advanced resource packs can override `assets/qte_engine/font/qte_key_compact.json` for small caps and `assets/qte_engine/font/qte_key_minecraft_five.json` for Minecraft Five while keeping the same renderer.
 
 ## Custom QTE image
 

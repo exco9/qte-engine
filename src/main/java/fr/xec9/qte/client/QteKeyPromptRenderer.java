@@ -20,8 +20,11 @@ final class QteKeyPromptRenderer {
     private static final ResourceLocation KEY = sprite("qte_key");
     private static final ResourceLocation KEY_PRESSED = sprite("qte_key_pressed");
     private static final ResourceLocation MOUSE_BASE = sprite("qte_mouse_base");
-    private static final ResourceLocation KEY_FONT = ResourceLocation.fromNamespaceAndPath(
+    private static final ResourceLocation SMALL_CAPS_FONT = ResourceLocation.fromNamespaceAndPath(
         QteEngine.MOD_ID, "qte_key_compact"
+    );
+    private static final ResourceLocation MINECRAFT_FIVE_FONT = ResourceLocation.fromNamespaceAndPath(
+        QteEngine.MOD_ID, "qte_key_minecraft_five"
     );
     private static final int ACTIVE = 0xFFF1F4F4;
     private static final int SUCCESS = 0xFF70E08C;
@@ -100,20 +103,6 @@ final class QteKeyPromptRenderer {
         boolean pressed,
         int alpha
     ) {
-        drawKeycap(graphics, font, label, centerX, centerY, size, pressed, alpha, KEY_FONT);
-    }
-
-    private static void drawKeycap(
-        GuiGraphics graphics,
-        Font font,
-        String label,
-        int centerX,
-        int centerY,
-        int size,
-        boolean pressed,
-        int alpha,
-        ResourceLocation labelFont
-    ) {
         int x = centerX - size / 2;
         int y = centerY - size / 2;
         String mouseSprite = QteHudModel.mousePromptSprite(label);
@@ -132,7 +121,12 @@ final class QteKeyPromptRenderer {
         graphics.blitSprite(pressed ? KEY_PRESSED : KEY, x, y, size, size);
         RenderSystem.setShaderColor(1, 1, 1, 1);
 
-        Component text = Component.literal(label).withStyle(style -> style.withFont(labelFont));
+        QteClientConfig.KeyFont keyFont = QteClientConfig.keyFont();
+        String displayLabel = QteKeyLabelStyle.forFont(label, keyFont);
+        ResourceLocation labelFont = keyFont == QteClientConfig.KeyFont.MINECRAFT_FIVE
+            ? MINECRAFT_FIVE_FONT
+            : SMALL_CAPS_FONT;
+        Component text = Component.literal(displayLabel).withStyle(style -> style.withFont(labelFont));
         float textScale = QteHudModel.keyLabelScale(font.width(text), size);
         graphics.pose().pushPose();
         graphics.pose().translate(
