@@ -43,12 +43,13 @@ class QteFontResourceTest {
     }
 
     @Test
-    void minecraftFiveModeUsesOnlyTheCompactBitmapAtlas() throws Exception {
+    void minecraftFiveModeUsesCompactAtlasWithVanillaFallback() throws Exception {
         String definition = Files.readString(Path.of(
             "src/main/resources/assets/qte_engine/font/qte_key_minecraft_five.json"
         ));
         assertTrue(definition.contains("\"type\": \"bitmap\""));
         assertTrue(definition.contains("qte_engine:font/minecraft_five_compact.png"));
+        assertTrue(definition.contains("\"id\": \"minecraft:default\""));
         assertFalse(definition.contains("\"type\": \"ttf\""));
 
         Path resources = Path.of("src/main/resources");
