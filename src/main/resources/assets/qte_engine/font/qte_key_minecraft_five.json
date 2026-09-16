@@ -9,6 +9,10 @@
         "ABCDEFGHIJKLMNOPQRS",
         "TUVWXYZ0123456789 _"
       ]
+    },
+    {
+      "type": "reference",
+      "id": "minecraft:default"
     }
   ]
 }
