@@ -27,5 +27,10 @@
   "qte.type.input_sequence": "Séquence de touches",
   "qte.type.balance": "Équilibre",
   "qte.type.aim": "Visée",
-  "qte.type.tracking": "Suivi"
+  "qte.type.tracking": "Suivi",
+  "qte_engine.configuration.title": "Configuration de QTE Engine",
+  "qte_engine.configuration.key_font": "Police des touches",
+  "qte_engine.configuration.key_font.tooltip": "Choisit entre les petites capitales Unicode natives et le bitmap compact Minecraft Five inclus.",
+  "qte_engine.configuration.key_font.small_caps": "Petites capitales",
+  "qte_engine.configuration.key_font.minecraft_five": "Minecraft Five"
 }
