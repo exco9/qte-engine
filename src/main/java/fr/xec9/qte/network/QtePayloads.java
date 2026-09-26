@@ -10,11 +10,18 @@ public final class QtePayloads {
     private QtePayloads() {}
 
     public static void register(RegisterPayloadHandlersEvent event) {
-        PayloadRegistrar registrar = event.registrar("4");
+        PayloadRegistrar registrar = event.registrar("6");
+        registrar.playToClient(TerminalQtePayload.TYPE, TerminalQtePayload.STREAM_CODEC,
+            (payload, context) -> QteClient.handleTerminal(payload.sessionId()));
         registrar.playToClient(
             StartQtePayload.TYPE,
             StartQtePayload.STREAM_CODEC,
             (payload, context) -> QteClient.handleStart(payload)
+        );
+        registrar.playToClient(
+            CancelQtePayload.TYPE,
+            CancelQtePayload.STREAM_CODEC,
+            (payload, context) -> QteClient.handleCancel(payload)
         );
         registrar.playToServer(
             QteInputPayload.TYPE,

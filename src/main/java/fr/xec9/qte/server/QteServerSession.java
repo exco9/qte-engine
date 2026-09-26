@@ -1,5 +1,6 @@
 package fr.xec9.qte.server;
 
+import fr.xec9.qte.api.QteRunOptions;
 import fr.xec9.qte.domain.QteDefinition;
 import fr.xec9.qte.domain.QteInput;
 import fr.xec9.qte.domain.QteJudge;
@@ -10,14 +11,31 @@ import java.util.UUID;
 final class QteServerSession {
     private final UUID id;
     private final QteDefinition definition;
+    private final QteRunOptions options;
     private final long startedAt;
     private final QteJudge judge;
+    private final java.util.function.Consumer<fr.xec9.qte.api.QteResult> completion;
+    private boolean completed;
 
-    QteServerSession(UUID id, QteDefinition definition, long startedAt) {
+    QteServerSession(UUID id, QteDefinition definition, QteRunOptions options, long startedAt) {
+        this(id, definition, options, startedAt, result -> {});
+    }
+
+    QteServerSession(UUID id, QteDefinition definition, QteRunOptions options, long startedAt,
+                     java.util.function.Consumer<fr.xec9.qte.api.QteResult> completion) {
+        this.completion = java.util.Objects.requireNonNull(completion);
         this.id = id;
         this.definition = definition;
+        this.options = options;
         this.startedAt = startedAt;
         this.judge = new QteJudge(definition, id.getMostSignificantBits() ^ id.getLeastSignificantBits());
+    }
+
+    void deliver(fr.xec9.qte.api.QteResult result, Runnable effects) {
+        if (completed) return;
+        completed = true;
+        try { effects.run(); }
+        finally { completion.accept(result); }
     }
 
     boolean accept(UUID sessionId, QteInput input, long now) {
@@ -54,6 +72,10 @@ final class QteServerSession {
 
     QteDefinition definition() {
         return definition;
+    }
+
+    QteRunOptions options() {
+        return options;
     }
 
     private long elapsed(long now) {

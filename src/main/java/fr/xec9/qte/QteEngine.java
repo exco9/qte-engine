@@ -17,6 +17,11 @@ public final class QteEngine {
         modBus.addListener(QtePayloads::register);
         NeoForge.EVENT_BUS.addListener(this::registerCommands);
         NeoForge.EVENT_BUS.addListener(this::serverTick);
+        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent event) -> {
+            if (event.getEntity() instanceof net.minecraft.server.level.ServerPlayer player) QteSessions.playerLoggedOut(player);
+        });
+        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.server.ServerStoppingEvent event) -> QteSessions.serverStopping(event.getServer()));
+        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.server.ServerStartedEvent event) -> QteSessions.serverStarted(event.getServer()));
     }
 
     private void registerCommands(RegisterCommandsEvent event) {
