@@ -123,8 +123,8 @@ class QteHudModelTest {
         assertEquals("qte_mouse_left", QteHudModel.mousePromptSprite("M1"));
         assertEquals("qte_mouse_right", QteHudModel.mousePromptSprite("M2"));
         assertEquals("qte_mouse_mb3", QteHudModel.mousePromptSprite("M3"));
-        assertEquals(null, QteHudModel.mousePromptSprite("BUTTON 4"));
-        assertEquals(null, QteHudModel.mousePromptSprite("A"));
+        assertEquals(null, QteHudModel.mousePromptSprite("ʙᴜᴛᴛᴏɴ 4"));
+        assertEquals(null, QteHudModel.mousePromptSprite("ᴀ"));
     }
 
     @Test
@@ -147,14 +147,23 @@ class QteHudModelTest {
 
     @Test
     void createsCompactReadableKeyLabels() {
-        assertEquals("Z", QteHudModel.keyLabel("key.localized.z"));
-        assertEquals("SPACE", QteHudModel.keyLabel("key.keyboard.space"));
+        assertEquals("ᴢ", QteHudModel.keyLabel("key.localized.z"));
+        assertEquals("ꜱᴘᴀᴄᴇ", QteHudModel.keyLabel("key.keyboard.space"));
         assertEquals("M1", QteHudModel.keyLabel("key.mouse.left"));
         assertEquals("M2", QteHudModel.keyLabel("key.mouse.right"));
         assertEquals("M3", QteHudModel.keyLabel("key.mouse.middle"));
-        assertEquals("BUTTON 4", QteHudModel.keyLabel("key.mouse.4"));
-        assertEquals("SHIFT", QteHudModel.keyLabel("key.keyboard.left_shift"));
-        assertEquals("CTRL", QteHudModel.keyLabel("key.keyboard.left_control"));
+        assertEquals("ʙᴜᴛᴛᴏɴ 4", QteHudModel.keyLabel("key.mouse.4"));
+        assertEquals("ꜱʜɪꜰᴛ", QteHudModel.keyLabel("key.keyboard.left_shift"));
+        assertEquals("ᴄᴛʀʟ", QteHudModel.keyLabel("key.keyboard.left_control"));
+        assertEquals("ᴀʟᴛ", QteHudModel.keyLabel("key.keyboard.left_alt"));
+    }
+
+    @Test
+    void convertsLatinAlphabetToSmallCapsWithoutChangingOtherCharacters() {
+        assertEquals(
+            "ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘꞯʀꜱᴛᴜᴠᴡxʏᴢ 123_-",
+            QteHudModel.smallCaps("ABCDEFGHIJKLMNOPQRSTUVWXYZ 123_-")
+        );
     }
 
     @Test
@@ -166,5 +175,4 @@ class QteHudModelTest {
         assertEquals(QteHudModel.Urgency.URGENT, QteHudModel.urgency(0.25));
         assertEquals(QteHudModel.Urgency.EXPIRED, QteHudModel.urgency(0.0));
     }
-
 }
