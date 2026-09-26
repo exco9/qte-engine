@@ -104,7 +104,7 @@ class QteHudModelTest {
 
     @Test
     void keyLabelIsCenteredAndShiftedUpWhileFollowingThePressedFace() {
-        assertEquals(1, QteHudModel.keyLabelXOffset());
+        assertEquals(0, QteHudModel.keyLabelXOffset());
         assertEquals(-2, QteHudModel.keyLabelYOffset(false));
         assertEquals(0, QteHudModel.keyLabelYOffset(true));
     }

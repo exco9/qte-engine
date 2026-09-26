@@ -155,7 +155,7 @@ final class QteHudModel {
     }
 
     static int keyLabelXOffset() {
-        return 1;
+        return 0;
     }
 
     static int keyLabelYOffset(boolean pressed) {
